@@ -1,5 +1,9 @@
 ﻿syntax OsdBuilder
 
+.Named(String name)
+.Described(String lang, String description)*
+
+/*
 .OpenSearchProject(
   .Named(String name)
   .Described(String lang, String description)*
@@ -15,4 +19,5 @@
     .Discoverable()?
     .Described(string lang, string description)*
   )*
-)//+
+)+
+*/
