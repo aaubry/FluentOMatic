@@ -1,0 +1,18 @@
+﻿syntax OsdBuilder
+
+.OpenSearchProject(
+  .Named(String name)
+  .Described(String lang, String description)*
+  .WithUrl(
+    .Named(string scheme)
+    .Template(string template)
+    .Discoverable()?
+    .Described(string lang, string description)*
+  )*
+  .WithQueryUrl(
+    .Scheme(string scheme)
+    .Template(string template)
+    .Discoverable()?
+    .Described(string lang, string description)*
+  )*
+)//+

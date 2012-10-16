@@ -1,0 +1,86 @@
+﻿COMPILER FluentOMatic
+
+CHARACTERS
+  letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+  digit = "0123456789".
+  cr  = '\r'.
+  lf  = '\n'.
+  tab = '\t'.
+  dot = '.'.
+  openParen = '('.
+  closeParen = ')'.
+  star = '*'.
+  question = '?'.
+  plus = '+'.
+  comma = ','.
+
+TOKENS
+  dot = dot.
+  ident  = letter { letter | digit }.
+  number = digit { digit }.
+  openParen = openParen.
+  closeParen = closeParen.
+  zeroOrMany = star.
+  zeroOrOne = question.
+  oneOrMany = plus.
+  parameterSep = comma.
+
+COMMENTS FROM "/*" TO "*/" NESTED
+COMMENTS FROM "//" TO lf
+
+IGNORE cr + lf + tab
+
+PRODUCTIONS
+
+FluentOMatic =									(. Syntax = new FluentSyntax(); .)
+												(. string syntaxName; .)
+  SyntaxName<out syntaxName>					(. Syntax.Name = syntaxName; .)
+												(. SOperationList operations; .)
+  OperationList<out operations>					(. Syntax.Operations.AddRange(operations); .)
+  .
+
+SyntaxName<out string name> =
+  "syntax"
+  ident											(. name = t.val; .)
+  .
+
+Operation<out SOperation result> =				(. result = new SOperation(); .)
+  dot
+  ident											(. result.Name = t.val; .)
+  openParen
+
+  [												(. SParameterList parameters; .)
+	ParameterList<out parameters>				(. result.Parameters.AddRange(parameters); .)
+  ]
+  [												(. SOperationList operations; .)
+	OperationList<out operations>				(. result.Operations.AddRange(operations); .)
+  ]
+
+  closeParen
+  [
+	zeroOrOne									(. result.Multiplicity = SMultiplicity.ZeroOrOne; .)
+	| zeroOrMany								(. result.Multiplicity = SMultiplicity.ZeroOrMany; .)
+	| oneOrMany									(. result.Multiplicity = SMultiplicity.OneOrMany; .)
+  ].
+
+OperationList<out SOperationList result> =		(. result = new SOperationList(); .)
+												(. SOperation operation; .)
+  Operation<out operation>						(. result.Add(operation); .)
+  {
+	Operation<out operation>					(. result.Add(operation); .)
+  }.
+
+Parameter<out SParameter result> =				(. result = new SParameter(); .)
+  ident											(. result.Type = t.val; .)
+  ident											(. result.Name = t.val; .)
+  .
+
+ParameterList<out SParameterList result> =		(. result = new SParameterList(); .)
+												(. SParameter parameter; .)
+  Parameter<out parameter>						(. result.Add(parameter); .)
+  {
+	parameterSep
+	Parameter<out parameter>					(. result.Add(parameter); .)
+  }.
+
+END FluentOMatic.
