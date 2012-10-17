@@ -23,22 +23,22 @@ namespace FluentOMatic.Emission
 		private const string _inner = "inner";
 		private const string _current = "current";
 
-		public void GenerateCode(State rootState, TextWriter output)
+		public void GenerateCode(State rootState, TextWriter output, string namespaceName)
 		{
 			_syntaxTypes.Clear();
 
 			var code = new CodeCompileUnit();
-			var ns = new CodeNamespace("Kebas");
+			var ns = new CodeNamespace(namespaceName);
 			code.Namespaces.Add(ns);
 			ns.Imports.Add(new CodeNamespaceImport("System"));
+
+			GenerateCode(t => ns.Types.Add(t), rootState, new HashSet<string>());
 
 			ns.Types.Add(new CodeTypeDeclaration(_syntaxEnd)
 			{
 				Attributes = MemberAttributes.Public,
 				TypeAttributes = TypeAttributes.Interface | TypeAttributes.Public,
 			});
-
-			GenerateCode(t => ns.Types.Add(t), rootState, new HashSet<string>());
 
 			var codeProvider = new CSharpCodeProvider();
 			codeProvider.GenerateCodeFromCompileUnit(code, output, new CodeGeneratorOptions
