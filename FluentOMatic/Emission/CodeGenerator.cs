@@ -1,11 +1,11 @@
 ﻿using FluentOMatic.States;
 using Microsoft.CSharp;
 using System;
-using System.Linq;
 using System.CodeDom;
 using System.CodeDom.Compiler;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace FluentOMatic.Emission
@@ -278,28 +278,6 @@ namespace FluentOMatic.Emission
 							new CodeThisReferenceExpression()
 						)
 					);
-
-					//stateTransitionMethod.Statements.Add(
-					//	new CodeAssignStatement(
-					//		new CodeFieldReferenceExpression(
-					//			new CodeThisReferenceExpression(),
-					//			nextStateField.Name
-					//		),
-					//		new CodeObjectCreateExpression(
-					//			nextStateData.SyntaxType.Name,
-					//			constructorParameters.ToArray()
-					//		)
-					//	)
-					//);
-
-					//stateTransitionMethod.Statements.Add(
-					//	new CodeMethodReturnStatement(
-					//		new CodeFieldReferenceExpression(
-					//			new CodeThisReferenceExpression(),
-					//			nextStateField.Name
-					//		)
-					//	)
-					//);
 				}
 
 				if (state.NextStates.All(s => s.IsOptional))
