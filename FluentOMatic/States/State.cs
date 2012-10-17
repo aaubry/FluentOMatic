@@ -11,10 +11,12 @@ namespace FluentOMatic.States
 
 		public State InnerState { get; set; }
 		public bool IsOptional { get; set; }
+		public bool IsRoot { get; private set; }
 
-		public State(string name, IEnumerable<Parameter> parameters)
+		public State(string name, bool isRoot, IEnumerable<Parameter> parameters)
 		{
 			Name = name;
+			IsRoot = isRoot;
 			Parameters = parameters;
 			NextStates = new List<State>();
 		}

@@ -23,31 +23,6 @@ namespace FluentOMatic.Emission
 		private const string _inner = "inner";
 		private const string _current = "current";
 
-		private static Dictionary<string, string> _builtInTypes = new Dictionary<string, string>
-		{
-			{ "bool", "Boolean" },
-			{ "byte", "Byte" },
-			{ "sbyte", "SByte" },
-			{ "char", "Char" },
-			{ "decimal", "Decimal" },
-			{ "double", "Double" },
-			{ "float", "Single" },
-			{ "int", "Int32" },
-			{ "uint", "UInt32" },
-			{ "long", "Int64" },
-			{ "ulong", "UInt64" },
-			{ "object", "Object" },
-			{ "short", "Int16" },
-			{ "ushort", "UInt16" },
-			{ "string", "String" },
-		};
-
-		private static string GetTypeName(string type)
-		{
-			string typeName;
-			return _builtInTypes.TryGetValue(type, out typeName) ? typeName : type;
-		}
-
 		public void GenerateCode(State rootState, TextWriter output)
 		{
 			_syntaxTypes.Clear();
@@ -91,7 +66,7 @@ namespace FluentOMatic.Emission
 
 		private void GenerateCode(Action<CodeTypeDeclaration> addType, State entryState, HashSet<string> usedNames)
 		{
-			var stateType = new CodeTypeDeclaration(GenerateName("_{0}{1}Syntax", entryState.Name, usedNames))
+			var stateType = new CodeTypeDeclaration(GenerateName("{0}{1}Builder", entryState.Name, usedNames))
 			{
 			};
 
@@ -102,6 +77,7 @@ namespace FluentOMatic.Emission
 			FlattenStateTree(entryState, states);
 			foreach (var state in states)
 			{
+				// Create syntax interface type
 				var interfaceType = new CodeTypeDeclaration(GenerateName("{0}{1}Syntax", state.Name, usedNames))
 				{
 					Attributes = MemberAttributes.Public,
@@ -111,65 +87,71 @@ namespace FluentOMatic.Emission
 
 				stateType.BaseTypes.Add(interfaceType.Name);
 
-				var syntaxType = new CodeTypeDeclaration(GenerateName("{0}{1}Data", state.Name, usedNames))
+				var syntaxType = stateType;
+
+				// Create data container
+				if (!state.IsRoot)
 				{
-					Attributes = MemberAttributes.Final | MemberAttributes.Public,
-					TypeAttributes = TypeAttributes.Sealed | TypeAttributes.Public,
-				};
-				addType(syntaxType);
-
-
-				//var constructor = new CodeConstructor { Attributes = MemberAttributes.Public };
-				//syntaxType.Members.Add(constructor);
-
-				//foreach (var parameter in state.Parameters)
-				//{
-				//	syntaxType.Members.Add(new CodeMemberField(
-				//		GetTypeName(parameter.Type),
-				//		parameter.Name
-				//	) { Attributes = MemberAttributes.Public });
-
-				//	constructor.Parameters.Add(new CodeParameterDeclarationExpression(
-				//		GetTypeName(parameter.Type),
-				//		parameter.Name
-				//	));
-
-				//	constructor.Statements.Add(new CodeAssignStatement(
-				//		new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), parameter.Name),
-				//		new CodeSnippetExpression(parameter.Name)
-				//	));
-				//}
-
-				if (state.InnerState != null)
-				{
-					StateData innerStateData;
-					if (!_syntaxTypes.TryGetValue(state.InnerState, out innerStateData))
+					syntaxType = new CodeTypeDeclaration(GenerateName("{0}{1}Data", state.Name, usedNames))
 					{
-						GenerateCode(addType, state.InnerState, usedNames);
-						innerStateData = _syntaxTypes[state.InnerState];
+						Attributes = MemberAttributes.Final | MemberAttributes.Public,
+						TypeAttributes = TypeAttributes.Sealed | TypeAttributes.Public,
+					};
+					addType(syntaxType);
+
+					foreach (var parameter in state.Parameters)
+					{
+						syntaxType.Members.Add(
+							new CodeMemberField(
+								parameter.Type,
+								parameter.Name
+							)
+							{
+								Attributes = MemberAttributes.Public
+							}
+						);
 					}
 
-					syntaxType.Members.Add(new CodeMemberField(
-						innerStateData.SyntaxType.Name,
-						_inner
-					) { Attributes = MemberAttributes.Public });
+					// Add field for each subsequent state
+					var allowMultiple = state.NextStates.Contains(state);
+					CodeMemberField nextStateField;
+					if (allowMultiple)
+					{
+						nextStateField = new CodeMemberField(
+							new CodeTypeReference(string.Format("System.Collections.Generic.IList<{0}>", syntaxType.Name)),
+							state.Name
+						)
+						{
+							Attributes = MemberAttributes.Public,
+							InitExpression = new CodeObjectCreateExpression(
+								string.Format("System.Collections.Generic.List<{0}>", syntaxType.Name)
+							)
+						};
+					}
+					else
+					{
+						nextStateField = new CodeMemberField(
+							syntaxType.Name,
+							state.Name
+						) { Attributes = MemberAttributes.Public };
+					}
 
-					//constructor.Parameters.Add(new CodeParameterDeclarationExpression(
-					//	string.Format("Func<{0}, {1}>", innerStateData.InterfaceType.Name, _syntaxEnd),
-					//	_inner
-					//));
+					stateType.Members.Add(nextStateField);
 
-					//constructor.Statements.Add(new CodeAssignStatement(
-					//	new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), _inner),
-					//	new CodeObjectCreateExpression(innerStateData.SyntaxType.Name)
-					//));
+					if (state.InnerState != null)
+					{
+						StateData innerStateData;
+						if (!_syntaxTypes.TryGetValue(state.InnerState, out innerStateData))
+						{
+							GenerateCode(addType, state.InnerState, usedNames);
+							innerStateData = _syntaxTypes[state.InnerState];
+						}
 
-					//constructor.Statements.Add(new CodeExpressionStatement(
-					//	new CodeDelegateInvokeExpression(
-					//		new CodeSnippetExpression(_inner),
-					//		new CodeFieldReferenceExpression(new CodeThisReferenceExpression(), _inner)
-					//	)
-					//));
+						syntaxType.Members.Add(new CodeMemberField(
+							innerStateData.SyntaxType.Name,
+							_inner
+						) { Attributes = MemberAttributes.Public });
+					}
 				}
 
 				_syntaxTypes.Add(state, new StateData { SyntaxType = syntaxType, InterfaceType = interfaceType });
@@ -183,149 +165,119 @@ namespace FluentOMatic.Emission
 				{
 					var nextStateData = _syntaxTypes[nextState];
 
-					var allowMultiple = nextState.NextStates.Contains(nextState);
+					// Add state transition method to interface
+					var stateTransitionInterfaceMethod = new CodeMemberMethod
+					{
+						Name = nextState.Name,
+					};
 
-					CodeMemberField nextStateField;
+					stateData.InterfaceType.Members.Add(stateTransitionInterfaceMethod);
+					stateTransitionInterfaceMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
+
+					// Add state transition method to type
+					var stateTransitionMethod = new CodeMemberMethod
+					{
+						Name = nextState.Name,
+						PrivateImplementationType = new CodeTypeReference(stateData.InterfaceType.Name),
+					};
+
+					stateType.Members.Add(stateTransitionMethod);
+					stateTransitionMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
+
+					var variable = new CodeVariableDeclarationStatement(
+						nextStateData.SyntaxType.Name,
+						"_" + nextState.Name,
+						new CodeObjectCreateExpression(nextStateData.SyntaxType.Name)
+					);
+					stateTransitionMethod.Statements.Add(variable);
+
+					foreach (var parameter in nextState.Parameters)
+					{
+						var methodParameter = new CodeParameterDeclarationExpression(
+							parameter.Type,
+							parameter.Name
+						);
+
+						stateTransitionMethod.Parameters.Add(methodParameter);
+						stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
+
+						stateTransitionMethod.Statements.Add(
+							new CodeAssignStatement(
+								new CodeFieldReferenceExpression(
+									new CodeVariableReferenceExpression(variable.Name),
+									parameter.Name
+								),
+								new CodeSnippetExpression(methodParameter.Name)
+							)
+						);
+					}
+
+					var allowMultiple = nextState.NextStates.Contains(nextState);
 					if (allowMultiple)
 					{
-						nextStateField = new CodeMemberField(
-							new CodeTypeReference(string.Format("System.Collections.Generic.IList<{0}>", nextStateData.SyntaxType.Name)),
-							nextState.Name
-						) {
-							Attributes = MemberAttributes.Public,
-							InitExpression = new CodeObjectCreateExpression(
-								string.Format("System.Collections.Generic.List<{0}>", nextStateData.SyntaxType.Name)
+						stateTransitionMethod.Statements.Add(
+							new CodeMethodInvokeExpression(
+								new CodeFieldReferenceExpression(
+									new CodeThisReferenceExpression(),
+									nextState.Name
+								),
+								"Add",
+								new CodeSnippetExpression(variable.Name)
 							)
-						};
-
-						
-
-						//var nextStateProperty = new CodeMemberProperty
-						//{
-						//	Name = nextState.Name,
-						//	HasGet = true,
-						//	Type = new CodeTypeReference(string.Format("System.Collections.Generic.IEnumerable<{0}>", nextStateData.SyntaxType.Name)),
-						//	Attributes = MemberAttributes.Public | MemberAttributes.Final,
-						//};
-
-						//nextStateProperty.GetStatements.Add(new CodeMethodReturnStatement(
-						//	new CodeFieldReferenceExpression(
-						//		new CodeThisReferenceExpression(),
-						//		nextStateField.Name
-						//	)
-						//));
-
-						//stateData.SyntaxType.Members.Add(nextStateProperty);
+						);
 					}
 					else
 					{
-						nextStateField = new CodeMemberField(
-							nextStateData.SyntaxType.Name,
-							nextState.Name
-						) { Attributes = MemberAttributes.Public };
+						stateTransitionMethod.Statements.Add(
+							new CodeAssignStatement(
+								new CodeFieldReferenceExpression(
+									new CodeThisReferenceExpression(),
+									nextState.Name
+								),
+								new CodeSnippetExpression(variable.Name)
+							)
+						);
 					}
 
-					stateType.Members.Add(nextStateField);
+					// Add parameter for inner state
+					if (nextState.InnerState != null)
+					{
+						var innerStateData = _syntaxTypes[nextState.InnerState];
 
+						var methodParameter = new CodeParameterDeclarationExpression(
+							string.Format("Func<{0}, {1}>", innerStateData.InterfaceType.Name, _syntaxEnd),
+							_inner
+						);
 
-					//if (state == nextState)
-					//{
-					//	var enumerableType = string.Format("System.Collections.Generic.IEnumerable<{0}>", stateData.SyntaxType.Name);
-					//	stateData.SyntaxType.BaseTypes.Add(enumerableType);
+						stateTransitionMethod.Parameters.Add(methodParameter);
+						stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
 
-					//	var enumeratorType = string.Format("System.Collections.Generic.IEnumerator<{0}>", stateData.SyntaxType.Name);
-					//	var getEnumeratorMethod = new CodeMemberMethod
-					//	{
-					//		Name = "GetEnumerator",
-					//		PrivateImplementationType = new CodeTypeReference(enumerableType),
-					//		ReturnType = new CodeTypeReference(enumeratorType),
-					//	};
+						stateTransitionMethod.Statements.Add(
+							new CodeAssignStatement(
+								new CodeFieldReferenceExpression(
+									new CodeSnippetExpression("_" + nextState.Name),
+									_inner
+								),
+								new CodeObjectCreateExpression(innerStateData.SyntaxType.Name)
+							)
+						);
 
-					//	getEnumeratorMethod.Statements.Add(
-					//		new CodeIterationStatement(
-					//			new CodeVariableDeclarationStatement(stateData.SyntaxType.Name, "current", new CodeThisReferenceExpression()),
-					//			new CodeBinaryOperatorExpression(
-					//				new CodeVariableReferenceExpression(_current),
-					//				CodeBinaryOperatorType.IdentityInequality,
-					//				new CodePrimitiveExpression(null)
-					//			),
-					//			new CodeAssignStatement(
-					//				new CodeVariableReferenceExpression(_current),
-					//				new CodeFieldReferenceExpression(
-					//					new CodeVariableReferenceExpression(_current),
-					//					nextStateField.Name
-					//				)
-					//			),
-					//			new CodeExpressionStatement(new CodeSnippetExpression("yield return " + _current))
-					//		)
-					//	);
+						stateTransitionMethod.Statements.Add(
+							new CodeDelegateInvokeExpression(
+								new CodeSnippetExpression(methodParameter.Name),
+								new CodeFieldReferenceExpression(
+									new CodeSnippetExpression("_" + nextState.Name),
+									_inner
+								)
+							)
+						);
+					}
 
-					//	stateData.SyntaxType.Members.Add(getEnumeratorMethod);
-
-					//	var legacyGetEnumeratorMethod = new CodeMemberMethod
-					//	{
-					//		Name = "GetEnumerator",
-					//		PrivateImplementationType = new CodeTypeReference("System.Collections.IEnumerable"),
-					//		ReturnType = new CodeTypeReference("System.Collections.IEnumerator"),
-					//	};
-
-					//	legacyGetEnumeratorMethod.Statements.Add(
-					//		new CodeMethodReturnStatement(
-					//			new CodeMethodInvokeExpression(
-					//				new CodeCastExpression(
-					//					enumerableType,
-					//					new CodeThisReferenceExpression()
-					//				),
-					//				"GetEnumerator"
-					//			)
-					//		)
-					//	);
-
-					//	stateData.SyntaxType.Members.Add(legacyGetEnumeratorMethod);
-					//}
-
-
-
-
-					//var stateTransitionMethod = new CodeMemberMethod
-					//{
-					//	Name = nextState.Name,
-					//	PrivateImplementationType = new CodeTypeReference(stateData.InterfaceType.Name),
-					//};
-
-					//var stateTransitionInterfaceMethod = new CodeMemberMethod
-					//{
-					//	Name = nextState.Name,
-					//};
-
-					//var constructorParameters = new List<CodeExpression>();
-					//foreach (var parameter in nextState.Parameters)
-					//{
-					//	var methodParameter = new CodeParameterDeclarationExpression(
-					//		GetTypeName(parameter.Type),
-					//		parameter.Name
-					//	);
-
-					//	stateTransitionMethod.Parameters.Add(methodParameter);
-					//	stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
-
-					//	constructorParameters.Add(new CodeSnippetExpression(parameter.Name));
-					//}
-
-					//if (nextState.InnerState != null)
-					//{
-					//	var innerStateData = _syntaxTypes[nextState.InnerState];
-
-					//	var methodParameter = new CodeParameterDeclarationExpression(
-					//		string.Format("Func<{0}, {1}>", innerStateData.InterfaceType.Name, _syntaxEnd),
-					//		_inner
-					//	);
-
-					//	stateTransitionMethod.Parameters.Add(methodParameter);
-					//	stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
-
-					//	constructorParameters.Add(new CodeSnippetExpression(_inner));
-					//}
+					stateTransitionMethod.Statements.Add(
+						new CodeMethodReturnStatement(
+							new CodeThisReferenceExpression()
+						)
+					);
 
 					//stateTransitionMethod.Statements.Add(
 					//	new CodeAssignStatement(
@@ -348,12 +300,6 @@ namespace FluentOMatic.Emission
 					//		)
 					//	)
 					//);
-
-					//stateData.SyntaxType.Members.Add(stateTransitionMethod);
-					//stateTransitionMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
-
-					//stateData.InterfaceType.Members.Add(stateTransitionInterfaceMethod);
-					//stateTransitionInterfaceMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
 				}
 
 				if (state.NextStates.All(s => s.IsOptional))

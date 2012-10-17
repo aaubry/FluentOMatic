@@ -15,7 +15,7 @@ namespace FluentOMatic.States
 
 		private State BuildGraph(string name, OperationList operations, ICollection<State> allStates)
 		{
-			var entryState = new State(name, Enumerable.Empty<Parameter>());
+			var entryState = new State(name, true, Enumerable.Empty<Parameter>());
 			allStates.Add(entryState);
 
 			var previousStates = new List<State> { entryState };
@@ -28,7 +28,7 @@ namespace FluentOMatic.States
 
 		private void BuildGraph(IList<State> previousStates, Operation operation, ICollection<State> allStates)
 		{
-			var currentState = new State(operation.Name, operation.Parameters);
+			var currentState = new State(operation.Name, false, operation.Parameters);
 			allStates.Add(currentState);
 
 			foreach (var previousState in previousStates)

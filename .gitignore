@@ -6,3 +6,5 @@ obj
 TestResults
 *.user
 *.suo
+
+ConsoleApplication1/output.cs

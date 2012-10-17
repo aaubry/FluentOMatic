@@ -1,10 +1,6 @@
-﻿syntax OsdBuilder
+﻿syntax Osd
 
-.Named(String name)
-.Described(String lang, String description)*
-
-/*
-.OpenSearchProject(
+.OpenSearchProject(string name
   .Named(String name)
   .Described(String lang, String description)*
   .WithUrl(
@@ -20,4 +16,3 @@
     .Described(string lang, string description)*
   )*
 )+
-*/
