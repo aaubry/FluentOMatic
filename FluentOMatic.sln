@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentOMatic", "FluentOMatic\FluentOMatic.csproj", "{585EBA59-6D22-4E78-BC87-3037FEAF5D02}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConsoleApplication1", "ConsoleApplication1\ConsoleApplication1.csproj", "{6A80156E-4E78-42A2-A5A5-DB3E288504BE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FluentOMatic.Console", "FluentOMatic.Console\FluentOMatic.Console.csproj", "{BB9DA877-5236-4290-832F-79EA683D80BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,9 +15,10 @@ Global
 		{585EBA59-6D22-4E78-BC87-3037FEAF5D02}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{585EBA59-6D22-4E78-BC87-3037FEAF5D02}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{585EBA59-6D22-4E78-BC87-3037FEAF5D02}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6A80156E-4E78-42A2-A5A5-DB3E288504BE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6A80156E-4E78-42A2-A5A5-DB3E288504BE}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6A80156E-4E78-42A2-A5A5-DB3E288504BE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BB9DA877-5236-4290-832F-79EA683D80BA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BB9DA877-5236-4290-832F-79EA683D80BA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BB9DA877-5236-4290-832F-79EA683D80BA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BB9DA877-5236-4290-832F-79EA683D80BA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
