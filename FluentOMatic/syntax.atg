@@ -42,6 +42,7 @@ TOKENS
   zeroOrOne = question.
   oneOrMany = plus.
   parameterSep = comma.
+  syntax = "syntax".
 
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO lf
@@ -58,7 +59,7 @@ FluentOMatic =									(. Syntax = new FluentSyntax(); .)
   .
 
 SyntaxName<out string name> =
-  "syntax"
+  syntax
   ident											(. name = t.val; .)
   .
 

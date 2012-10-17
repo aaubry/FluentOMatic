@@ -1,0 +1,118 @@
+﻿//    Copyright 2012 Antoine Aubry
+//    
+//    This file is part of FluentOMatic.
+//
+//    FluentOMatic is free software: you can redistribute it and/or modify
+//    it under the terms of the GNU General Public License as published by
+//    the Free Software Foundation, either version 3 of the License, or
+//    (at your option) any later version.
+//
+//    FluentOMatic is distributed in the hope that it will be useful,
+//    but WITHOUT ANY WARRANTY; without even the implied warranty of
+//    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//    GNU General Public License for more details.
+//
+//    You should have received a copy of the GNU General Public License
+//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+
+<#@ template language="C#" debug="True" hostspecific="False"
+#><#@ assembly name="Microsoft.CSharp"
+#><#@ assembly name="System.Core.dll"
+#><#@ assembly name="System.Data"
+#><#@ assembly name="System.Xml"
+#><#@ assembly name="System.Configuration"
+#><#@ import namespace="System.Collections.Generic"
+#><#@ import namespace="System.Diagnostics"
+#><#@ import namespace="System.Globalization"
+#><#@ import namespace="System.IO"
+#><#@ import namespace="System.Linq"
+#><#@ import namespace="System.Text"
+#><#@ import namespace="System.Text.RegularExpressions"
+#><#@ import namespace="System.Configuration"
+#><#
+	var tokens = new[]
+	{
+		new { Name = "Dot", Foreground = "Black", Background = "White" },
+		new { Name = "Identifier", Foreground = "Green", Background = "White" },
+		new { Name = "Number", Foreground = "Blue", Background = "White" },
+		new { Name = "OpenParen", Foreground = "Red", Background = "White" },
+		new { Name = "CloseParen", Foreground = "Red", Background = "White" },
+		new { Name = "ZeroOrMany", Foreground = "Yellow", Background = "White" },
+		new { Name = "ZeroOrOne", Foreground = "Yellow", Background = "White" },
+		new { Name = "OneOrMany", Foreground = "Yellow", Background = "White" },
+		new { Name = "Comma", Foreground = "Pink", Background = "White" },
+		new { Name = "Syntax", Foreground = "Cyan", Background = "White" },
+
+		// Extra
+		new { Name = "Type", Foreground = "Gray", Background = "White" },
+		new { Name = "SyntaxName", Foreground = "Lime", Background = "White" },
+	};
+#>
+using System.ComponentModel.Composition;
+using System.Windows.Media;
+using Microsoft.VisualStudio.Text.Classification;
+using Microsoft.VisualStudio.Utilities;
+
+namespace FluentOMatic.Editor
+{
+	partial class Editor
+	{
+		private IClassificationType[] _classificationTypes;
+
+		internal Editor(IClassificationTypeRegistryService registry)
+		{
+			_classificationTypes = new[]
+			{
+<#
+	foreach(var token in tokens)
+	{
+#>
+				registry.GetClassificationType("FluentOMatic.<#= token.Name #>"),
+<#
+	}
+#>
+			};
+		}
+	}
+
+    internal static class EditorClassificationDefinition
+    {
+<#
+	foreach(var token in tokens)
+	{
+#>
+        [Export(typeof(ClassificationTypeDefinition))]
+        [Name("FluentOMatic.<#= token.Name #>")]
+        internal static ClassificationTypeDefinition <#= token.Name #>EditorType = null;
+
+<#
+	}
+#>
+    }
+
+<#
+	foreach(var token in tokens)
+	{
+#>
+    [Export(typeof(EditorFormatDefinition))]
+    [ClassificationType(ClassificationTypeNames = "FluentOMatic.<#= token.Name #>")]
+	[Name("FluentOMatic.<#= token.Name #>")]
+    [UserVisible(true)] //this should be visible to the end user
+    [Order(Before = Priority.Default)] //set the priority to be after the default classifiers
+    internal sealed class <#= token.Name #>EditorFormat : ClassificationFormatDefinition
+    {
+        /// <summary>
+        /// Defines the visual format for the "FluentOMatic.Editor" classification type
+        /// </summary>
+        public <#= token.Name #>EditorFormat()
+        {
+			DisplayName = "FluentOMatic.<#= token.Name #>"; //human readable version of the name
+			ForegroundColor = Colors.<#= token.Foreground #>;
+            BackgroundColor = Colors.<#= token.Background #>;
+        }
+    }
+
+<#
+	}
+#>
+}
