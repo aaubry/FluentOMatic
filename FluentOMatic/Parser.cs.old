@@ -14,7 +14,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
 using SOperation = FluentOMatic.Syntax.Operation;
@@ -39,6 +39,7 @@ public class Parser {
 	public const int _zeroOrOne = 7;
 	public const int _oneOrMany = 8;
 	public const int _parameterSep = 9;
+	public const int _syntax = 10;
 	public const int maxT = 11;
 
 	const bool T = true;
@@ -227,7 +228,7 @@ public class Errors {
 			case 7: s = "zeroOrOne expected"; break;
 			case 8: s = "oneOrMany expected"; break;
 			case 9: s = "parameterSep expected"; break;
-			case 10: s = "\"syntax\" expected"; break;
+			case 10: s = "syntax expected"; break;
 			case 11: s = "??? expected"; break;
 
 			default: s = "error " + n; break;

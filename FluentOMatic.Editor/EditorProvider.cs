@@ -13,7 +13,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 using EnvDTE;
 using FluentOMatic.Emission;
@@ -60,24 +60,31 @@ namespace FluentOMatic.Editor
 			{
 				var generatedFileName = document.FullName + ".cs";
 
-				var parser = new Parser(new Scanner(document.FullName));
-				parser.errors.errorStream = new StringWriter();
-				parser.Parse();
-
-				if (parser.errors.count != 0)
+				try
 				{
-					File.WriteAllText(generatedFileName, parser.errors.errorStream.ToString());
-				}
-				else
-				{
-					var graphBuilder = new StateGraphBuilder();
-					var states = graphBuilder.BuildGraph(parser.Syntax);
+					var parser = new Parser(new Scanner(document.FullName));
+					parser.errors.errorStream = new StringWriter();
+					parser.Parse();
 
-					using (var output = File.CreateText(generatedFileName))
+					if (parser.errors.count != 0)
 					{
-						var generator = new CodeGenerator();
-						generator.GenerateCode(states.First(), output, parser.Syntax.Name);
+						File.WriteAllText(generatedFileName, parser.errors.errorStream.ToString());
 					}
+					else
+					{
+						var graphBuilder = new StateGraphBuilder();
+						var states = graphBuilder.BuildGraph(parser.Syntax);
+
+						using (var output = File.CreateText(generatedFileName))
+						{
+							var generator = new CodeGenerator();
+							generator.GenerateCode(states.First(), output, parser.Syntax.Name);
+						}
+					}
+				}
+				catch (Exception err)
+				{
+					File.WriteAllText(generatedFileName, err.ToString());
 				}
 
 				var fileAlreadyAdded = false;

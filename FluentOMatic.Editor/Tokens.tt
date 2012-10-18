@@ -13,7 +13,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 <#@ template language="C#" debug="True" hostspecific="False"
 #><#@ assembly name="Microsoft.CSharp"
@@ -30,26 +30,41 @@
 #><#@ import namespace="System.Text.RegularExpressions"
 #><#@ import namespace="System.Configuration"
 #><#
-	var tokens = new[]
+	var tokens = new dynamic[]
 	{
-		new { Name = "Dot", Foreground = "Black", Background = "White" },
-		new { Name = "Identifier", Foreground = "Green", Background = "White" },
-		new { Name = "Number", Foreground = "Blue", Background = "White" },
-		new { Name = "OpenParen", Foreground = "Red", Background = "White" },
-		new { Name = "CloseParen", Foreground = "Red", Background = "White" },
-		new { Name = "ZeroOrMany", Foreground = "Yellow", Background = "White" },
-		new { Name = "ZeroOrOne", Foreground = "Yellow", Background = "White" },
-		new { Name = "OneOrMany", Foreground = "Yellow", Background = "White" },
-		new { Name = "Comma", Foreground = "Pink", Background = "White" },
-		new { Name = "Syntax", Foreground = "Cyan", Background = "White" },
+		new { Name = "Dot", Classification = "Operator" },
+		new { Name = "Identifier", Classification = "Identifier" },
+		new { Name = "Number", Classification = "Number" },
+		new { Name = "OpenParen", Classification = "Operator" },
+		new { Name = "CloseParen", Classification = "Operator" },
+		new { Name = "ZeroOrMany", Classification = "Keyword" },
+		new { Name = "ZeroOrOne", Classification = "Keyword" },
+		new { Name = "OneOrMany", Classification = "Keyword" },
+		new { Name = "Comma", Classification = "Operator" },
+		new { Name = "Syntax", Classification = "Keyword" },
 
 		// Extra
-		new { Name = "Type", Foreground = "Gray", Background = "White" },
-		new { Name = "SyntaxName", Foreground = "Lime", Background = "White" },
-	};
+		new { Name = "Type", Classification = "SymbolReference" },
+		new { Name = "Parameter", Classification = "SymbolDefinition" },
+		new { Name = "SyntaxName", Classification = "String" },
+	}
+	.Select(t =>
+	{
+		try
+		{
+			return new { Name = (string)t.Name, Classification = (string)t.Classification, Foreground = (string)null, Background = (string)null };
+		}
+		catch (Exception)
+		{
+			return new { Name = (string)t.Name, Classification = (string)null, Foreground = (string)t.Foreground, Background = (string)t.Background };
+		}
+	});
+
+
 #>
 using System.ComponentModel.Composition;
 using System.Windows.Media;
+using Microsoft.VisualStudio.Language.StandardClassification;
 using Microsoft.VisualStudio.Text.Classification;
 using Microsoft.VisualStudio.Utilities;
 
@@ -66,9 +81,18 @@ namespace FluentOMatic.Editor
 <#
 	foreach(var token in tokens)
 	{
+		if(token.Classification == null)
+		{
 #>
 				registry.GetClassificationType("FluentOMatic.<#= token.Name #>"),
 <#
+		}
+		else
+		{
+#>
+				registry.GetClassificationType(PredefinedClassificationTypeNames.<#= token.Classification #>),
+<#
+		}
 	}
 #>
 			};
@@ -78,7 +102,7 @@ namespace FluentOMatic.Editor
     internal static class EditorClassificationDefinition
     {
 <#
-	foreach(var token in tokens)
+	foreach(var token in tokens.Where(t => t.Classification == null))
 	{
 #>
         [Export(typeof(ClassificationTypeDefinition))]
@@ -91,7 +115,7 @@ namespace FluentOMatic.Editor
     }
 
 <#
-	foreach(var token in tokens)
+	foreach(var token in tokens.Where(t => t.Classification == null))
 	{
 #>
     [Export(typeof(EditorFormatDefinition))]

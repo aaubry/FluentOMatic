@@ -13,7 +13,7 @@
 //    GNU General Public License for more details.
 //
 //    You should have received a copy of the GNU General Public License
-//    along with Foobar.  If not, see <http://www.gnu.org/licenses/>.
+//    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 using Microsoft.VisualStudio.Text;
 using Microsoft.VisualStudio.Text.Classification;
@@ -48,14 +48,20 @@ namespace FluentOMatic.Editor
 				switch (kind)
 				{
 					case 2:
-						// Argument type
+						// Parameter type
 						if (scanner.Peek().kind == 2)
 						{
 							kind = 11;
 						}
-						else if (previousTokenKind == 10)
+						// Parameter name
+						else if (previousTokenKind == 11)
 						{
 							kind = 12;
+						}
+						// Syntax name
+						else if (previousTokenKind == 10)
+						{
+							kind = 13;
 						}
 						break;
 				}
