@@ -45,12 +45,13 @@ namespace FluentOMatic.Editor
 		internal IClassificationTypeRegistryService ClassificationRegistry = null; // Set via MEF
 
 		private readonly DocumentEvents _documentEvents;
+		private readonly _DTE _dte;
 
 		[ImportingConstructor]
 		public EditorProvider(SVsServiceProvider serviceProvider)
 		{
-			var dte = (_DTE)serviceProvider.GetService(typeof(_DTE));
-			_documentEvents = dte.Events.DocumentEvents;
+			_dte = (_DTE)serviceProvider.GetService(typeof(_DTE));
+			_documentEvents = _dte.Events.DocumentEvents;
 			_documentEvents.DocumentSaved += OnDocumentSaved;
 		}
 
@@ -59,6 +60,28 @@ namespace FluentOMatic.Editor
 			if (document.FullName.EndsWith(FileAndContentTypeDefinitions.FileExtension, StringComparison.OrdinalIgnoreCase))
 			{
 				var generatedFileName = document.FullName + ".cs";
+
+				Action<string> saveDocument = text => File.WriteAllText(generatedFileName, text);
+
+				var openDocument = _dte.Documents
+					.Cast<Document>()
+					.FirstOrDefault(d => d.FullName.Equals(generatedFileName, StringComparison.OrdinalIgnoreCase));
+
+				if (openDocument != null)
+				{
+					saveDocument = text =>
+					{
+						var selection = (TextSelection)(object)openDocument.Selection;
+						selection.StartOfDocument();
+						selection.EndOfDocument(true);
+						selection.Text = "";
+
+						var textDocument = (TextDocument)(object)openDocument.Object("TextDocument");
+						textDocument.StartPoint.CreateEditPoint().Insert(text);
+
+						openDocument.Save();
+					};
+				}
 
 				var project = document.ProjectItem.ContainingProject;
 				var ns = ((object)project.Properties.Item("DefaultNamespace").Value).ToString();
@@ -80,23 +103,24 @@ namespace FluentOMatic.Editor
 
 					if (parser.errors.count != 0)
 					{
-						File.WriteAllText(generatedFileName, parser.errors.errorStream.ToString());
+						saveDocument(parser.errors.errorStream.ToString());
 					}
 					else
 					{
 						var graphBuilder = new StateGraphBuilder();
 						var states = graphBuilder.BuildGraph(parser.Syntax);
 
-						using (var output = File.CreateText(generatedFileName))
+						using (var output = new StringWriter())
 						{
 							var generator = new CodeGenerator();
 							generator.GenerateCode(states.First(), output, string.Join(".", ns, parser.Syntax.Name), parser.Syntax.Usings);
+							saveDocument(output.ToString());
 						}
 					}
 				}
 				catch (Exception err)
 				{
-					File.WriteAllText(generatedFileName, err.ToString());
+					saveDocument(err.ToString());
 				}
 
 				var fileAlreadyAdded = false;

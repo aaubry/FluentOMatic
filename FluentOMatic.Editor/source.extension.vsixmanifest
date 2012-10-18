@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011" xmlns:d="http://schemas.microsoft.com/developer/vsx-schema-design/2011">
   <Metadata>
-	<Identity Id="FluentOMatic.Editor..23efaa1e-7238-43a4-913a-dc8c04d6e2a8" Version="1.1" Language="en-US" Publisher="Antoine Aubry" />
+	<Identity Id="FluentOMatic.Editor..23efaa1e-7238-43a4-913a-dc8c04d6e2a8" Version="1.2" Language="en-US" Publisher="Antoine Aubry" />
 	<DisplayName>FluentOMatic.Editor</DisplayName>
 	<Description xml:space="preserve">This is a sample classifier extension to the Visual Studio Editor.</Description>
 	<License>license.txt</License>

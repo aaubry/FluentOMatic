@@ -8,3 +8,4 @@ TestResults
 *.suo
 
 ConsoleApplication1/output.cs
+*.old
