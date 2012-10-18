@@ -220,8 +220,8 @@ public class UTF8Buffer: Buffer {
 public class Scanner {
 	const char EOL = '\n';
 	const int eofSym = 0; /* pdt */
-	const int maxT = 11;
-	const int noSym = 11;
+	const int maxT = 14;
+	const int noSym = 14;
 
 
 	public Buffer buffer; // scanner buffer
@@ -253,6 +253,8 @@ public class Scanner {
 		for (int i = 63; i <= 63; ++i) start[i] = 7;
 		for (int i = 43; i <= 43; ++i) start[i] = 8;
 		for (int i = 44; i <= 44; ++i) start[i] = 9;
+		start[34] = 10; 
+		start[59] = 12; 
 		start[Buffer.EOF] = -1;
 
 	}
@@ -366,6 +368,7 @@ public class Scanner {
 	void CheckLiteral() {
 		switch (t.val) {
 			case "syntax": t.kind = 10; break;
+			case "using": t.kind = 12; break;
 			default: break;
 		}
 	}
@@ -415,6 +418,14 @@ public class Scanner {
 				{t.kind = 8; break;}
 			case 9:
 				{t.kind = 9; break;}
+			case 10:
+				if (ch <= '!' || ch >= '#' && ch <= 65535) {AddCh(); goto case 10;}
+				else if (ch == '"') {AddCh(); goto case 11;}
+				else {goto case 0;}
+			case 11:
+				{t.kind = 11; break;}
+			case 12:
+				{t.kind = 13; break;}
 
 		}
 		t.val = new String(tval, 0, tlen);

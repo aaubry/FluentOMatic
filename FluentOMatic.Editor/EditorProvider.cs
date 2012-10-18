@@ -60,6 +60,18 @@ namespace FluentOMatic.Editor
 			{
 				var generatedFileName = document.FullName + ".cs";
 
+				var project = document.ProjectItem.ContainingProject;
+				var ns = ((object)project.Properties.Item("DefaultNamespace").Value).ToString();
+
+				var projectDir = Path.GetDirectoryName(project.FullName);
+				var fileDir = Path.GetDirectoryName(generatedFileName);
+
+				if (fileDir.StartsWith(projectDir, StringComparison.OrdinalIgnoreCase))
+				{
+					var relativePath = fileDir.Substring(projectDir.Length);
+					ns += relativePath.Replace('\\', '.');
+				}
+
 				try
 				{
 					var parser = new Parser(new Scanner(document.FullName));
@@ -78,7 +90,7 @@ namespace FluentOMatic.Editor
 						using (var output = File.CreateText(generatedFileName))
 						{
 							var generator = new CodeGenerator();
-							generator.GenerateCode(states.First(), output, parser.Syntax.Name);
+							generator.GenerateCode(states.First(), output, string.Join(".", ns, parser.Syntax.Name), parser.Syntax.Usings);
 						}
 					}
 				}

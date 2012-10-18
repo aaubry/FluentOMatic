@@ -42,11 +42,15 @@
 		new { Name = "OneOrMany", Classification = "Keyword" },
 		new { Name = "Comma", Classification = "Operator" },
 		new { Name = "Syntax", Classification = "Keyword" },
+		new { Name = "String", Classification = "SymbolReference" },
+		new { Name = "Using", Classification = "Keyword" },
+		new { Name = "EndOfUsing", Classification = "Operator" },
 
 		// Extra
 		new { Name = "Type", Classification = "SymbolReference" },
 		new { Name = "Parameter", Classification = "SymbolDefinition" },
 		new { Name = "SyntaxName", Classification = "String" },
+		new { Name = "Namespace", Classification = "String" },
 	}
 	.Select(t =>
 	{
@@ -96,6 +100,18 @@ namespace FluentOMatic.Editor
 	}
 #>
 			};
+		}
+
+		private static class TokenType
+		{
+<#
+	foreach(var token in tokens.Select((t, i) => new { Name = t.Name, Index = i + 1 }))
+	{
+#>
+			public const int <#= token.Name #> = <#= token.Index #>;
+<#
+	}
+#>
 		}
 	}
 

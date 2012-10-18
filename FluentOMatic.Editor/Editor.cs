@@ -41,27 +41,30 @@ namespace FluentOMatic.Editor
 
 			var classifications = new List<ClassificationSpan>();
 			Token token;
+			bool isNamespace = false;
 			int previousTokenKind = 0;
 			while ((token = scanner.Scan()).kind != 0)
 			{
 				var kind = token.kind;
 				switch (kind)
 				{
-					case 2:
-						// Parameter type
-						if (scanner.Peek().kind == 2)
+					case TokenType.Identifier:
+						if (scanner.Peek().kind == TokenType.Identifier)
 						{
-							kind = 11;
+							kind = TokenType.Type;
 						}
-						// Parameter name
-						else if (previousTokenKind == 11)
+						else if (previousTokenKind == TokenType.Type)
 						{
-							kind = 12;
+							kind = TokenType.Parameter;
 						}
-						// Syntax name
-						else if (previousTokenKind == 10)
+						else if (previousTokenKind == TokenType.Syntax)
 						{
-							kind = 13;
+							kind = TokenType.SyntaxName;
+						}
+						else if (previousTokenKind == TokenType.Using || isNamespace)
+						{
+							kind = TokenType.Namespace;
+							isNamespace = true;
 						}
 						break;
 				}

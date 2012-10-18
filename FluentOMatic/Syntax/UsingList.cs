@@ -15,18 +15,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
+using System.Collections.Generic;
+
 namespace FluentOMatic.Syntax
 {
-	public class FluentSyntax
+	public class UsingList : List<Using>
 	{
-		public string Name { get; set; }
-		public UsingList Usings { get; private set; }
-		public OperationList Operations { get; private set; }
-
-		public FluentSyntax()
-		{
-			Usings = new UsingList();
-			Operations = new OperationList();
-		}
 	}
 }

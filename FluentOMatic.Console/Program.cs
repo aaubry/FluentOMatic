@@ -25,7 +25,7 @@ namespace FluentOMatic.Console
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static int Main(string[] args)
 		{
 			string inputFile = null;
 			string outputFile = null;
@@ -64,11 +64,20 @@ namespace FluentOMatic.Console
 				System.Console.WriteLine(notice.Replace("\t", ""));
 
 				options.WriteOptionDescriptions(System.Console.Out);
-				return;
+				return 2;
 			}
 
 			var parser = new Parser(inputFile != null ? new Scanner(inputFile) : new Scanner(System.Console.OpenStandardInput()));
+
+			var previousConsoleColor = System.Console.ForegroundColor;
+			System.Console.ForegroundColor = System.ConsoleColor.Red;
 			parser.Parse();
+			System.Console.ForegroundColor = previousConsoleColor;
+
+			if (parser.errors.count != 0)
+			{
+				return 1;
+			}
 
 			var graphBuilder = new StateGraphBuilder();
 			var states = graphBuilder.BuildGraph(parser.Syntax);
@@ -76,10 +85,12 @@ namespace FluentOMatic.Console
 			var output = outputFile != null ? File.CreateText(outputFile) : System.Console.Out;
 
 			var generator = new CodeGenerator();
-			generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name);
+			generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings);
 
 			output.Flush();
 			output.Close();
+
+			return 0;
 		}
 	}
 }

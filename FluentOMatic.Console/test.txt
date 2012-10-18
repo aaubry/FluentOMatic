@@ -1,8 +1,11 @@
 ﻿syntax Osd
+using System.Collections;
 
+.Name("aaa" bb)
+/*
 .OpenSearchProject(string name
   .Named(String name)
-  .Described(String lang, String description)*
+  .Described(String lang, "List<String>" description)*
   .WithUrl(
     .Named(string scheme)
     .Template(string template)
@@ -16,3 +19,4 @@
     .Described(string lang, string description)*
   )*
 )+
+*/

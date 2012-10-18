@@ -24,6 +24,7 @@ namespace FluentOMatic.Editor
 	{
 		public const string FileExtension = ".flu";
 
+#pragma warning disable 0649	// Field is never assigned
 		[Export]
 		[Name("fluent")]
 		[BaseDefinition("text")]
@@ -33,5 +34,6 @@ namespace FluentOMatic.Editor
 		[FileExtension(FileExtension)]
 		[ContentType("fluent")]
 		internal static FileExtensionToContentTypeDefinition hiddenFileExtensionDefinition;
+#pragma warning restore 0649
 	}
 }

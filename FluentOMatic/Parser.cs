@@ -22,6 +22,8 @@ using SOperationList = FluentOMatic.Syntax.OperationList;
 using SParameter = FluentOMatic.Syntax.Parameter;
 using SParameterList = FluentOMatic.Syntax.ParameterList;
 using SMultiplicity = FluentOMatic.Syntax.Multiplicity;
+using SUsing = FluentOMatic.Syntax.Using;
+using SUsingList = FluentOMatic.Syntax.UsingList;
 using FluentSyntax = FluentOMatic.Syntax.FluentSyntax;
 
 namespace FluentOMatic {
@@ -40,7 +42,10 @@ public class Parser {
 	public const int _oneOrMany = 8;
 	public const int _parameterSep = 9;
 	public const int _syntax = 10;
-	public const int maxT = 11;
+	public const int _string = 11;
+	public const int _using = 12;
+	public const int _endOfUsing = 13;
+	public const int maxT = 14;
 
 	const bool T = true;
 	const bool x = false;
@@ -119,6 +124,9 @@ public class Parser {
 		string syntaxName; 
 		SyntaxName(out syntaxName);
 		Syntax.Name = syntaxName; 
+		SUsingList usings; 
+		UsingList(out usings);
+		Syntax.Usings.AddRange(usings); 
 		SOperationList operations; 
 		OperationList(out operations);
 		Syntax.Operations.AddRange(operations); 
@@ -128,6 +136,15 @@ public class Parser {
 		Expect(10);
 		Expect(2);
 		name = t.val; 
+	}
+
+	void UsingList(out SUsingList result) {
+		result = new SUsingList(); 
+		while (la.kind == 12) {
+			SUsing u; 
+			Using(out u);
+			result.Add(u); 
+		}
 	}
 
 	void OperationList(out SOperationList result) {
@@ -141,13 +158,26 @@ public class Parser {
 		}
 	}
 
+	void Using(out SUsing result) {
+		result = new SUsing(); 
+		Expect(12);
+		Expect(2);
+		result.Namespace = t.val; 
+		while (la.kind == 1) {
+			Get();
+			Expect(2);
+			result.Namespace += "." + t.val; 
+		}
+		Expect(13);
+	}
+
 	void Operation(out SOperation result) {
 		result = new SOperation(); 
 		Expect(1);
 		Expect(2);
 		result.Name = t.val; 
 		Expect(4);
-		if (la.kind == 2) {
+		if (la.kind == 2 || la.kind == 11) {
 			SParameterList parameters; 
 			ParameterList(out parameters);
 			result.Parameters.AddRange(parameters); 
@@ -186,8 +216,13 @@ public class Parser {
 
 	void Parameter(out SParameter result) {
 		result = new SParameter(); 
-		Expect(2);
-		result.Type = t.val; 
+		if (la.kind == 11) {
+			Get();
+			result.Type = t.val.Trim('"'); 
+		} else if (la.kind == 2) {
+			Get();
+			result.Type = t.val; 
+		} else SynErr(15);
 		Expect(2);
 		result.Name = t.val; 
 	}
@@ -204,7 +239,7 @@ public class Parser {
 	}
 	
 	static readonly bool[,] set = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x}
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x}
 
 	};
 } // end Parser
@@ -229,7 +264,11 @@ public class Errors {
 			case 8: s = "oneOrMany expected"; break;
 			case 9: s = "parameterSep expected"; break;
 			case 10: s = "syntax expected"; break;
-			case 11: s = "??? expected"; break;
+			case 11: s = "string expected"; break;
+			case 12: s = "using expected"; break;
+			case 13: s = "endOfUsing expected"; break;
+			case 14: s = "??? expected"; break;
+			case 15: s = "invalid Parameter"; break;
 
 			default: s = "error " + n; break;
 		}

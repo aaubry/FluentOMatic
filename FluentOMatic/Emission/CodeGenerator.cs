@@ -16,6 +16,7 @@
 //    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 using FluentOMatic.States;
+using FluentOMatic.Syntax;
 using Microsoft.CSharp;
 using System;
 using System.CodeDom;
@@ -40,7 +41,7 @@ namespace FluentOMatic.Emission
 		private const string _inner = "inner";
 		private const string _current = "current";
 
-		public void GenerateCode(State rootState, TextWriter output, string namespaceName)
+		public void GenerateCode(State rootState, TextWriter output, string namespaceName, UsingList usings)
 		{
 			_syntaxTypes.Clear();
 
@@ -48,6 +49,11 @@ namespace FluentOMatic.Emission
 			var ns = new CodeNamespace(namespaceName);
 			code.Namespaces.Add(ns);
 			ns.Imports.Add(new CodeNamespaceImport("System"));
+
+			foreach (var u in usings)
+			{
+				ns.Imports.Add(new CodeNamespaceImport(u.Namespace));
+			}
 
 			GenerateCode(t => ns.Types.Add(t), rootState, new HashSet<string>());
 

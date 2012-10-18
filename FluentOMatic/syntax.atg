@@ -31,10 +31,11 @@ CHARACTERS
   question = '?'.
   plus = '+'.
   comma = ','.
+  string = ANY - '"'.
 
 TOKENS
   dot = dot.
-  ident  = letter { letter | digit }.
+  ident = letter { letter | digit }.
   number = digit { digit }.
   openParen = openParen.
   closeParen = closeParen.
@@ -43,6 +44,9 @@ TOKENS
   oneOrMany = plus.
   parameterSep = comma.
   syntax = "syntax".
+  string = "\"" { string } "\"".
+  using = "using".
+  endOfUsing = ";".
 
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO lf
@@ -54,6 +58,8 @@ PRODUCTIONS
 FluentOMatic =									(. Syntax = new FluentSyntax(); .)
 												(. string syntaxName; .)
   SyntaxName<out syntaxName>					(. Syntax.Name = syntaxName; .)
+												(. SUsingList usings; .)
+  UsingList<out usings>							(. Syntax.Usings.AddRange(usings); .)
 												(. SOperationList operations; .)
   OperationList<out operations>					(. Syntax.Operations.AddRange(operations); .)
   .
@@ -62,6 +68,20 @@ SyntaxName<out string name> =
   syntax
   ident											(. name = t.val; .)
   .
+
+Using<out SUsing result> =						(. result = new SUsing(); .)
+  using
+  ident											(. result.Namespace = t.val; .)
+  {
+	dot
+	ident										(. result.Namespace += "." + t.val; .)
+  }
+  endOfUsing.
+
+UsingList<out SUsingList result> =				(. result = new SUsingList(); .)
+  {												(. SUsing u; .)
+	Using<out u>								(. result.Add(u); .)
+  }.
 
 Operation<out SOperation result> =				(. result = new SOperation(); .)
   dot
@@ -90,7 +110,10 @@ OperationList<out SOperationList result> =		(. result = new SOperationList(); .)
   }.
 
 Parameter<out SParameter result> =				(. result = new SParameter(); .)
-  ident											(. result.Type = t.val; .)
+  (
+	string										(. result.Type = t.val.Trim('"'); .)
+	| ident										(. result.Type = t.val; .)
+  )
   ident											(. result.Name = t.val; .)
   .
 
