@@ -109,7 +109,7 @@ namespace FluentOMatic.Console
 			output.WriteLine("digraph {");
 			foreach (var state in states)
 			{
-				output.WriteLine("  {0} [label=\"{1}\"];", stateNames[state], state.Name);
+				output.WriteLine("  {0} [label=\"{1}\",shape={2}];", stateNames[state], state.Name, state.IsTerminal ? "box" : "ellipse");
 
 				foreach (var nextState in state.NextStates)
 				{

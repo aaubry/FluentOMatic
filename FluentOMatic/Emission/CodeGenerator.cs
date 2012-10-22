@@ -303,7 +303,7 @@ namespace FluentOMatic.Emission
 					);
 				}
 
-				if (state.NextStates.All(s => s.IsOptional))
+				if (state.IsTerminal)
 				{
 					stateData.InterfaceType.BaseTypes.Add(_syntaxEnd);
 				}

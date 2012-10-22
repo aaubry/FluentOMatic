@@ -17,6 +17,7 @@
 
 using FluentOMatic.Syntax;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace FluentOMatic.States
 {
@@ -29,6 +30,14 @@ namespace FluentOMatic.States
 		public State InnerState { get; set; }
 		public bool IsOptional { get; set; }
 		public bool IsRoot { get; private set; }
+
+		public bool IsTerminal
+		{
+			get
+			{
+				return NextStates.All(s => s.IsOptional || ReferenceEquals(s, this));
+			}
+		}
 
 		public State(string name, bool isRoot, IEnumerable<Parameter> parameters)
 		{
