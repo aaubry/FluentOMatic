@@ -67,13 +67,16 @@ namespace FluentOMatic.States
 
 				case Multiplicity.OneOrMany:
 					previousStates.Clear();
+					previousStates.Add(currentState);
+
 					currentState.NextStates.Add(currentState);
 					break;
 
 				case Multiplicity.ZeroOrMany:
 					previousStates.Add(currentState);
-					currentState.NextStates.Add(currentState);
 					currentState.IsOptional = true;
+
+					currentState.NextStates.Add(currentState);
 					break;
 			}
 

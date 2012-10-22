@@ -18,6 +18,7 @@
 using FluentOMatic.Emission;
 using FluentOMatic.States;
 using NDesk.Options;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
@@ -31,12 +32,14 @@ namespace FluentOMatic.Console
 			string outputFile = null;
 			string namespaceName = null;
 			bool help = false;
+			bool graph = false;
 
 			var options = new OptionSet
 			{
 				{ "i|input=", v => inputFile = v },
 				{ "o|output=", v => outputFile = v },
  				{ "ns|namespace=", v => namespaceName = v },
+				{ "g|graph", var => graph = true },
 				{ "h|?|help", v => help = true },
 			};
 
@@ -84,13 +87,41 @@ namespace FluentOMatic.Console
 
 			var output = outputFile != null ? File.CreateText(outputFile) : System.Console.Out;
 
-			var generator = new CodeGenerator();
-			generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings);
-
+			if (graph)
+			{
+				GenerateStateGraph(states, output);
+			}
+			else
+			{
+				var generator = new CodeGenerator();
+				generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings);
+			}
 			output.Flush();
 			output.Close();
 
 			return 0;
+		}
+
+		private static void GenerateStateGraph(ICollection<State> states, TextWriter output)
+		{
+			int index = 0;
+			var stateNames = states.ToDictionary(s => s, s => "S" + index++);
+			output.WriteLine("digraph {");
+			foreach (var state in states)
+			{
+				output.WriteLine("  {0} [label=\"{1}\"];", stateNames[state], state.Name);
+
+				foreach (var nextState in state.NextStates)
+				{
+					output.WriteLine("  {0} -> {1};", stateNames[state], stateNames[nextState]);
+				}
+
+				if (state.InnerState != null)
+				{
+					output.WriteLine("  {0} -> {1} [style=dotted];", stateNames[state], stateNames[state.InnerState]);
+				}
+			}
+			output.WriteLine("}");
 		}
 	}
 }

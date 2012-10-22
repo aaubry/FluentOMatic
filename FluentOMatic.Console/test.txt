@@ -1,22 +1,11 @@
-﻿syntax Osd
-using System.Collections;
+﻿syntax Service
 
-.Name("aaa" bb)
-/*
-.OpenSearchProject(string name
-  .Named(String name)
-  .Described(String lang, "List<String>" description)*
-  .WithUrl(
-    .Named(string scheme)
-    .Template(string template)
-    .Discoverable()?
-    .Described(string lang, string description)*
-  )*
-  .WithQueryUrl(
-    .Scheme(string scheme)
-    .Template(string template)
-    .Discoverable()?
-    .Described(string lang, string description)*
-  )*
-)+
-*/
+.OpenSearch(string name
+  .Description(string lang, string text)+
+  .Operation(string scheme, string template
+	//.Description(string lang, string text)+
+	//.Strategy(string container, string clientId, string xml)
+  )+
+)*
+/*.Wsdl(
+)**/

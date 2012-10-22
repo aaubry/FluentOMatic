@@ -9,3 +9,5 @@ TestResults
 
 ConsoleApplication1/output.cs
 *.old
+packages/*
+packages/*
