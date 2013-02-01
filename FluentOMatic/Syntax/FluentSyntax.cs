@@ -21,12 +21,12 @@ namespace FluentOMatic.Syntax
 	{
 		public string Name { get; set; }
 		public UsingList Usings { get; private set; }
-		public OperationList Operations { get; private set; }
+		public OperationGroupList OperationGroups { get; private set; }
 
 		public FluentSyntax()
 		{
 			Usings = new UsingList();
-			Operations = new OperationList();
+			OperationGroups = new OperationGroupList();
 		}
 	}
 }

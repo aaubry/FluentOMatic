@@ -15,41 +15,11 @@
 //    You should have received a copy of the GNU General Public License
 //    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
-using FluentOMatic.Syntax;
 using System.Collections.Generic;
-using System.Linq;
 
-namespace FluentOMatic.States
+namespace FluentOMatic.Syntax
 {
-	public class State
+	public class OperationGroupList : List<OperationList>
 	{
-		public string Name { get; private set; }
-		public IEnumerable<Parameter> Parameters { get; private set; }
-		public ICollection<ICollection<State>> NextStates { get; private set; }
-
-		public State InnerState { get; set; }
-		public bool IsOptional { get; set; }
-		public bool IsRoot { get; private set; }
-
-		public bool IsTerminal
-		{
-			get
-			{
-				return NextStates.Any(g => g.All(s => s.IsOptional || ReferenceEquals(s, this)));
-			}
-		}
-
-		public State(string name, bool isRoot, IEnumerable<Parameter> parameters)
-		{
-			Name = name;
-			IsRoot = isRoot;
-			Parameters = parameters;
-			NextStates = new List<ICollection<State>>();
-		}
-
-		public override string ToString()
-		{
-			return Name;
-		}
 	}
 }

@@ -44,7 +44,7 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Emission\CodeGenerator.cs" />
+    <Content Include="Emission\CodeGenerator.cs" />
     <Compile Include="States\State.cs" />
     <Compile Include="States\StateGraphBuilder.cs" />
     <Compile Include="Syntax\FluentSyntax.cs" />
@@ -53,6 +53,7 @@
     <Compile Include="Parser.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Scanner.cs" />
+    <Compile Include="Syntax\OperationGroup.cs" />
     <Compile Include="Syntax\OperationList.cs" />
     <Compile Include="Syntax\Parameter.cs" />
     <Compile Include="Syntax\ParameterList.cs" />
