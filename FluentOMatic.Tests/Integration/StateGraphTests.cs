@@ -60,5 +60,46 @@ namespace FluentOMatic.Tests.Integration
 
 			Assert.True(states.Last().IsTerminal);
 		}
+
+		[Fact]
+		public void OneOrMany_followed_by_OneOrMany_can_repeat_second_method()
+		{
+			var states = ParseSyntaxToGraph(@"
+				syntax s
+				.First()+
+				.Second()+
+			");
+
+			Assert.Equal(3, states.Count);
+			StateGraphAssert.AllStatesCanBeReached(states);
+		}
+
+		[Fact]
+		public void X()
+		{
+			var states = ParseSyntaxToGraph(@"
+				syntax Service
+
+				.OpenSearch(string name
+				  .Description(string lang, string text)+
+				  .Operation(string scheme, string template
+					.Description(string lang, string text)+
+					.Strategy(string container, string clientId, string xml)*
+				  )+
+				)*
+				.Wsdl(string name, string ns
+				  .Description(string lang, string text
+					.Tag(string name)*
+				  )+
+				  .Operation(string name
+					.Description(string lang, string text)+
+					.Strategy(string container, string clientId, string xml)
+				  )+
+				)*
+			");
+
+			//Assert.Equal(3, states.Count);
+			StateGraphAssert.AllStatesCanBeReached(states);
+		}
 	}
 }
