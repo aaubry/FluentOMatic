@@ -24,7 +24,7 @@ namespace FluentOMatic.Syntax
 		public string Name { get; set; }
 		public Multiplicity Multiplicity { get; set; }
 		public ParameterList Parameters { get; private set; }
-		public OperationGroupList OperationGroups { get; private set; }
+		public OperationList Operations { get; private set; }
 
 		public bool IsRequired { get { return Multiplicity == Syntax.Multiplicity.One || Multiplicity == Syntax.Multiplicity.OneOrMany; } }
 		public bool IsMultiple { get { return Multiplicity == Syntax.Multiplicity.ZeroOrMany || Multiplicity == Syntax.Multiplicity.OneOrMany; } }
@@ -32,7 +32,7 @@ namespace FluentOMatic.Syntax
 		public Operation()
 		{
 			Parameters = new ParameterList();
-			OperationGroups = new OperationGroupList();
+			Operations = new OperationList();
 		}
 
 		public override string ToString()

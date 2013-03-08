@@ -26,11 +26,11 @@ namespace FluentOMatic.States
 		public ICollection<State> BuildGraph(FluentSyntax syntax)
 		{
 			var allStates = new List<State>();
-			BuildGraph(syntax.Name, syntax.OperationGroups, allStates);
+			BuildGraph(syntax.Name, syntax.Operations, allStates);
 			return allStates;
 		}
 
-		private State BuildGraph(string name, OperationGroupList operationGroups, ICollection<State> allStates)
+		private State BuildGraph(string name, OperationList operations, ICollection<State> allStates)
 		{
 			var entryState = new State(name, true, Enumerable.Empty<Parameter>());
 			allStates.Add(entryState);
@@ -80,7 +80,7 @@ namespace FluentOMatic.States
 					break;
 			}
 
-			if (operation.OperationGroups.Any())
+			if (operation.Operations.Any())
 			{
 				currentState.InnerState = BuildGraph(operation.Name + "Inner", operation.Operations, allStates);
 			}

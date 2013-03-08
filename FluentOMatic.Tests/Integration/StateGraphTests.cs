@@ -60,38 +60,5 @@ namespace FluentOMatic.Tests.Integration
 
 			Assert.True(states.Last().IsTerminal);
 		}
-
-		[Fact]
-		public void Alternatives_are_present()
-		{
-			var states = ParseSyntaxToGraph(@"
-				syntax s
-				(
-					.Choice1()
-				|
-					.Choice2()
-				)
-			");
-
-			//var entryState = states.First();
-			//entryState.n
-
-			Assert.True(states.Last().IsTerminal);
-		}
-
-		[Fact]
-		public void Alternatives_are_terminal()
-		{
-			var states = ParseSyntaxToGraph(@"
-				syntax s
-				(
-					.Choice1()
-				|
-					.Choice2()
-				)
-			");
-
-			Assert.True(states.Last().IsTerminal);
-		}
 	}
 }

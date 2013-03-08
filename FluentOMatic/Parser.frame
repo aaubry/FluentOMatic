@@ -50,7 +50,6 @@ using SParameterList = FluentOMatic.Syntax.ParameterList;
 using SMultiplicity = FluentOMatic.Syntax.Multiplicity;
 using SUsing = FluentOMatic.Syntax.Using;
 using SUsingList = FluentOMatic.Syntax.UsingList;
-using SOperationGroupList = FluentOMatic.Syntax.OperationGroupList;
 using FluentSyntax = FluentOMatic.Syntax.FluentSyntax;
 
 -->namespace

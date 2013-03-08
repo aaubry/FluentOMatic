@@ -24,7 +24,6 @@ using SParameterList = FluentOMatic.Syntax.ParameterList;
 using SMultiplicity = FluentOMatic.Syntax.Multiplicity;
 using SUsing = FluentOMatic.Syntax.Using;
 using SUsingList = FluentOMatic.Syntax.UsingList;
-using SOperationGroupList = FluentOMatic.Syntax.OperationGroupList;
 using FluentSyntax = FluentOMatic.Syntax.FluentSyntax;
 
 namespace FluentOMatic {
@@ -38,16 +37,15 @@ public class Parser {
 	public const int _number = 3;
 	public const int _openParen = 4;
 	public const int _closeParen = 5;
-	public const int _pipe = 6;
-	public const int _zeroOrMany = 7;
-	public const int _zeroOrOne = 8;
-	public const int _oneOrMany = 9;
-	public const int _parameterSep = 10;
-	public const int _syntax = 11;
-	public const int _string = 12;
-	public const int _using = 13;
-	public const int _endOfUsing = 14;
-	public const int maxT = 15;
+	public const int _zeroOrMany = 6;
+	public const int _zeroOrOne = 7;
+	public const int _oneOrMany = 8;
+	public const int _parameterSep = 9;
+	public const int _syntax = 10;
+	public const int _string = 11;
+	public const int _using = 12;
+	public const int _endOfUsing = 13;
+	public const int maxT = 14;
 
 	const bool T = true;
 	const bool x = false;
@@ -129,98 +127,23 @@ public class Parser {
 		SUsingList usings; 
 		UsingList(out usings);
 		Syntax.Usings.AddRange(usings); 
-		SOperationGroupList operationGroups; 
-		OperationGroups(out operationGroups);
-		Syntax.OperationGroups.AddRange(operationGroups); 
+		SOperationList operations; 
+		OperationList(out operations);
+		Syntax.Operations.AddRange(operations); 
 	}
 
 	void SyntaxName(out string name) {
-		Expect(11);
+		Expect(10);
 		Expect(2);
 		name = t.val; 
 	}
 
 	void UsingList(out SUsingList result) {
 		result = new SUsingList(); 
-		while (la.kind == 13) {
+		while (la.kind == 12) {
 			SUsing u; 
 			Using(out u);
 			result.Add(u); 
-		}
-	}
-
-	void OperationGroups(out SOperationGroupList result) {
-		result = new SOperationGroupList(); 
-		SOperationList group; 
-		if (la.kind == 4) {
-			Get();
-			OperationList(out group);
-			result.Add(group); 
-			while (la.kind == 6) {
-				Get();
-				OperationList(out group);
-				result.Add(group); 
-			}
-			Expect(5);
-		} else if (la.kind == 1) {
-			OperationList(out group);
-			result.Add(group); 
-		} else SynErr(16);
-	}
-
-	void Using(out SUsing result) {
-		result = new SUsing(); 
-		Expect(13);
-		Expect(2);
-		result.Namespace = t.val; 
-		while (la.kind == 1) {
-			Get();
-			Expect(2);
-			result.Namespace += "." + t.val; 
-		}
-		Expect(14);
-	}
-
-	void Operation(out SOperation result) {
-		result = new SOperation(); 
-		Expect(1);
-		Expect(2);
-		result.Name = t.val; 
-		Expect(4);
-		if (la.kind == 2 || la.kind == 12) {
-			SParameterList parameters; 
-			ParameterList(out parameters);
-			result.Parameters.AddRange(parameters); 
-		}
-		if (la.kind == 1 || la.kind == 4) {
-			SOperationGroupList operationGroups; 
-			OperationGroups(out operationGroups);
-			result.OperationGroups.AddRange(operationGroups); 
-		}
-		Expect(5);
-		if (la.kind == 7 || la.kind == 8 || la.kind == 9) {
-			if (la.kind == 8) {
-				Get();
-				result.Multiplicity = SMultiplicity.ZeroOrOne; 
-			} else if (la.kind == 7) {
-				Get();
-				result.Multiplicity = SMultiplicity.ZeroOrMany; 
-			} else {
-				Get();
-				result.Multiplicity = SMultiplicity.OneOrMany; 
-			}
-		}
-	}
-
-	void ParameterList(out SParameterList result) {
-		result = new SParameterList(); 
-		SParameter parameter; 
-		Parameter(out parameter);
-		result.Add(parameter); 
-		while (la.kind == 10) {
-			Get();
-			Parameter(out parameter);
-			result.Add(parameter); 
 		}
 	}
 
@@ -235,15 +158,71 @@ public class Parser {
 		}
 	}
 
+	void Using(out SUsing result) {
+		result = new SUsing(); 
+		Expect(12);
+		Expect(2);
+		result.Namespace = t.val; 
+		while (la.kind == 1) {
+			Get();
+			Expect(2);
+			result.Namespace += "." + t.val; 
+		}
+		Expect(13);
+	}
+
+	void Operation(out SOperation result) {
+		result = new SOperation(); 
+		Expect(1);
+		Expect(2);
+		result.Name = t.val; 
+		Expect(4);
+		if (la.kind == 2 || la.kind == 11) {
+			SParameterList parameters; 
+			ParameterList(out parameters);
+			result.Parameters.AddRange(parameters); 
+		}
+		if (la.kind == 1) {
+			SOperationList operations; 
+			OperationList(out operations);
+			result.Operations.AddRange(operations); 
+		}
+		Expect(5);
+		if (la.kind == 6 || la.kind == 7 || la.kind == 8) {
+			if (la.kind == 7) {
+				Get();
+				result.Multiplicity = SMultiplicity.ZeroOrOne; 
+			} else if (la.kind == 6) {
+				Get();
+				result.Multiplicity = SMultiplicity.ZeroOrMany; 
+			} else {
+				Get();
+				result.Multiplicity = SMultiplicity.OneOrMany; 
+			}
+		}
+	}
+
+	void ParameterList(out SParameterList result) {
+		result = new SParameterList(); 
+		SParameter parameter; 
+		Parameter(out parameter);
+		result.Add(parameter); 
+		while (la.kind == 9) {
+			Get();
+			Parameter(out parameter);
+			result.Add(parameter); 
+		}
+	}
+
 	void Parameter(out SParameter result) {
 		result = new SParameter(); 
-		if (la.kind == 12) {
+		if (la.kind == 11) {
 			Get();
 			result.Type = t.val.Trim('"'); 
 		} else if (la.kind == 2) {
 			Get();
 			result.Type = t.val; 
-		} else SynErr(17);
+		} else SynErr(15);
 		Expect(2);
 		result.Name = t.val; 
 	}
@@ -260,7 +239,7 @@ public class Parser {
 	}
 	
 	static readonly bool[,] set = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x}
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x}
 
 	};
 } // end Parser
@@ -280,18 +259,16 @@ public class Errors {
 			case 3: s = "number expected"; break;
 			case 4: s = "openParen expected"; break;
 			case 5: s = "closeParen expected"; break;
-			case 6: s = "pipe expected"; break;
-			case 7: s = "zeroOrMany expected"; break;
-			case 8: s = "zeroOrOne expected"; break;
-			case 9: s = "oneOrMany expected"; break;
-			case 10: s = "parameterSep expected"; break;
-			case 11: s = "syntax expected"; break;
-			case 12: s = "string expected"; break;
-			case 13: s = "using expected"; break;
-			case 14: s = "endOfUsing expected"; break;
-			case 15: s = "??? expected"; break;
-			case 16: s = "invalid OperationGroups"; break;
-			case 17: s = "invalid Parameter"; break;
+			case 6: s = "zeroOrMany expected"; break;
+			case 7: s = "zeroOrOne expected"; break;
+			case 8: s = "oneOrMany expected"; break;
+			case 9: s = "parameterSep expected"; break;
+			case 10: s = "syntax expected"; break;
+			case 11: s = "string expected"; break;
+			case 12: s = "using expected"; break;
+			case 13: s = "endOfUsing expected"; break;
+			case 14: s = "??? expected"; break;
+			case 15: s = "invalid Parameter"; break;
 
 			default: s = "error " + n; break;
 		}

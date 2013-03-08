@@ -1,54 +1,52 @@
 ﻿/*
-   Copyright 2012 Antoine Aubry
-   
-   This file is part of FluentOMatic.
- 
-   FluentOMatic is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
- 
-   FluentOMatic is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-   GNU General Public License for more details.
- 
-   You should have received a copy of the GNU General Public License
-   along with FluentOMatic. If not, see <http://www.gnu.org/licenses/>.
+      Copyright 2012 Antoine Aubry
+      
+      This file is part of FluentOMatic.
+  
+      FluentOMatic is free software: you can redistribute it and/or modify
+      it under the terms of the GNU General Public License as published by
+      the Free Software Foundation, either version 3 of the License, or
+      (at your option) any later version.
+  
+      FluentOMatic is distributed in the hope that it will be useful,
+      but WITHOUT ANY WARRANTY; without even the implied warranty of
+      MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+      GNU General Public License for more details.
+  
+      You should have received a copy of the GNU General Public License
+      along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 */
 COMPILER FluentOMatic
 
 CHARACTERS
-	letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
-	digit = "0123456789".
-	cr = '\r'.
-	lf = '\n'.
-	tab = '\t'.
-	dot = '.'.
-	openParen = '('.
-	closeParen = ')'.
-	star = '*'.
-	question = '?'.
-	plus = '+'.
-	comma = ','.
-	pipe = '|'.
-	string = ANY - '"'.
+  letter = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".
+  digit = "0123456789".
+  cr  = '\r'.
+  lf  = '\n'.
+  tab = '\t'.
+  dot = '.'.
+  openParen = '('.
+  closeParen = ')'.
+  star = '*'.
+  question = '?'.
+  plus = '+'.
+  comma = ','.
+  string = ANY - '"'.
 
 TOKENS
-	dot = dot.
-	ident = letter { letter | digit }.
-	number = digit { digit }.
-	openParen = openParen.
-	closeParen = closeParen.
-	pipe = pipe.
-	zeroOrMany = star.
-	zeroOrOne = question.
-	oneOrMany = plus.
-	parameterSep = comma.
-	syntax = "syntax".
-	string = "\"" { string } "\"".
-	using = "using".
-	endOfUsing = ";".
+  dot = dot.
+  ident = letter { letter | digit }.
+  number = digit { digit }.
+  openParen = openParen.
+  closeParen = closeParen.
+  zeroOrMany = star.
+  zeroOrOne = question.
+  oneOrMany = plus.
+  parameterSep = comma.
+  syntax = "syntax".
+  string = "\"" { string } "\"".
+  using = "using".
+  endOfUsing = ";".
 
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO lf
@@ -57,87 +55,74 @@ IGNORE cr + lf + tab
 
 PRODUCTIONS
 
-FluentOMatic =												(. Syntax = new FluentSyntax(); .)
-															(. string syntaxName; .)
-	SyntaxName<out syntaxName>								(. Syntax.Name = syntaxName; .)
-															(. SUsingList usings; .)
-	UsingList<out usings>									(. Syntax.Usings.AddRange(usings); .)
-															(. SOperationGroupList operationGroups; .)
-	OperationGroups<out operationGroups>					(. Syntax.OperationGroups.AddRange(operationGroups); .)
-	.
+FluentOMatic =									(. Syntax = new FluentSyntax(); .)
+												(. string syntaxName; .)
+  SyntaxName<out syntaxName>					(. Syntax.Name = syntaxName; .)
+												(. SUsingList usings; .)
+  UsingList<out usings>							(. Syntax.Usings.AddRange(usings); .)
+												(. SOperationList operations; .)
+  OperationList<out operations>					(. Syntax.Operations.AddRange(operations); .)
+  .
 
 SyntaxName<out string name> =
-	syntax
-	ident													(. name = t.val; .)
-	.
+  syntax
+  ident											(. name = t.val; .)
+  .
 
-Using<out SUsing result> =									(. result = new SUsing(); .)
-	using
-	ident													(. result.Namespace = t.val; .)
-	{
-		dot
-		ident												(. result.Namespace += "." + t.val; .)
-	}
-	endOfUsing.
-
-UsingList<out SUsingList result> =							(. result = new SUsingList(); .)
-	{														(. SUsing u; .)
-		Using<out u>										(. result.Add(u); .)
-	}.
-
-Operation<out SOperation result> =							(. result = new SOperation(); .)
+Using<out SUsing result> =						(. result = new SUsing(); .)
+  using
+  ident											(. result.Namespace = t.val; .)
+  {
 	dot
-	ident													(. result.Name = t.val; .)
-	openParen
-	[														(. SParameterList parameters; .)
-		ParameterList<out parameters>						(. result.Parameters.AddRange(parameters); .)
-	]
-	[														(. SOperationGroupList operationGroups; .)
-		OperationGroups<out operationGroups>				(. result.OperationGroups.AddRange(operationGroups); .)
-	]
-	closeParen
-	[
-		zeroOrOne											(. result.Multiplicity = SMultiplicity.ZeroOrOne; .)
-		| zeroOrMany										(. result.Multiplicity = SMultiplicity.ZeroOrMany; .)
-		| oneOrMany											(. result.Multiplicity = SMultiplicity.OneOrMany; .)
-	].
+	ident										(. result.Namespace += "." + t.val; .)
+  }
+  endOfUsing.
 
-OperationGroups<out SOperationGroupList result> =			(. result = new SOperationGroupList(); .)
-															(. SOperationList group; .)
-	(
-		openParen
-		OperationList<out group>							(. result.Add(group); .)
-		{
-			pipe
-			OperationList<out group>						(. result.Add(group); .)
-		}
-		closeParen
-	|
-		OperationList<out group>							(. result.Add(group); .)
-	)
-	.
+UsingList<out SUsingList result> =				(. result = new SUsingList(); .)
+  {												(. SUsing u; .)
+	Using<out u>								(. result.Add(u); .)
+  }.
 
-OperationList<out SOperationList result> =					(. result = new SOperationList(); .)
-															(. SOperation operation; .)
-	Operation<out operation>								(. result.Add(operation); .)
-	{
-		Operation<out operation>							(. result.Add(operation); .)
-	}.
+Operation<out SOperation result> =				(. result = new SOperation(); .)
+  dot
+  ident											(. result.Name = t.val; .)
+  openParen
 
-Parameter<out SParameter result> =							(. result = new SParameter(); .)
-	(
-		string												(. result.Type = t.val.Trim('"'); .)
-		| ident												(. result.Type = t.val; .)
-	)
-	ident													(. result.Name = t.val; .)
-	.
+  [												(. SParameterList parameters; .)
+	ParameterList<out parameters>				(. result.Parameters.AddRange(parameters); .)
+  ]
+  [												(. SOperationList operations; .)
+	OperationList<out operations>				(. result.Operations.AddRange(operations); .)
+  ]
 
-ParameterList<out SParameterList result> =					(. result = new SParameterList(); .)
-															(. SParameter parameter; .)
-	Parameter<out parameter>								(. result.Add(parameter); .)
-	{
-		parameterSep
-		Parameter<out parameter>							(. result.Add(parameter); .)
-	}.
+  closeParen
+  [
+	zeroOrOne									(. result.Multiplicity = SMultiplicity.ZeroOrOne; .)
+	| zeroOrMany								(. result.Multiplicity = SMultiplicity.ZeroOrMany; .)
+	| oneOrMany									(. result.Multiplicity = SMultiplicity.OneOrMany; .)
+  ].
+
+OperationList<out SOperationList result> =		(. result = new SOperationList(); .)
+												(. SOperation operation; .)
+  Operation<out operation>						(. result.Add(operation); .)
+  {
+	Operation<out operation>					(. result.Add(operation); .)
+  }.
+
+Parameter<out SParameter result> =				(. result = new SParameter(); .)
+  (
+	string										(. result.Type = t.val.Trim('"'); .)
+	| ident										(. result.Type = t.val; .)
+  )
+  ident											(. result.Name = t.val; .)
+  .
+
+ParameterList<out SParameterList result> =		(. result = new SParameterList(); .)
+												(. SParameter parameter; .)
+  Parameter<out parameter>						(. result.Add(parameter); .)
+  {
+	parameterSep
+	Parameter<out parameter>					(. result.Add(parameter); .)
+  }.
 
 END FluentOMatic.

@@ -25,7 +25,7 @@ namespace FluentOMatic.States
 	{
 		public string Name { get; private set; }
 		public IEnumerable<Parameter> Parameters { get; private set; }
-		public ICollection<ICollection<State>> NextStates { get; private set; }
+		public ICollection<State> NextStates { get; private set; }
 
 		public State InnerState { get; set; }
 		public bool IsOptional { get; set; }
@@ -35,7 +35,7 @@ namespace FluentOMatic.States
 		{
 			get
 			{
-				return NextStates.Any(g => g.All(s => s.IsOptional || ReferenceEquals(s, this)));
+				return NextStates.All(s => s.IsOptional || ReferenceEquals(s, this));
 			}
 		}
 
@@ -44,7 +44,7 @@ namespace FluentOMatic.States
 			Name = name;
 			IsRoot = isRoot;
 			Parameters = parameters;
-			NextStates = new List<ICollection<State>>();
+			NextStates = new List<State>();
 		}
 
 		public override string ToString()
