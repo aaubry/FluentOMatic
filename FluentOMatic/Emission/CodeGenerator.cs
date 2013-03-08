@@ -41,7 +41,7 @@ namespace FluentOMatic.Emission
 		private const string _inner = "inner";
 		private const string _current = "current";
 
-		public void GenerateCode(State rootState, TextWriter output, string namespaceName, UsingList usings)
+		public void GenerateCode(State rootState, TextWriter output, string namespaceName, UsingList usings, string[] genericArguments)
 		{
 			_syntaxTypes.Clear();
 
@@ -55,7 +55,7 @@ namespace FluentOMatic.Emission
 				ns.Imports.Add(new CodeNamespaceImport(u.Namespace));
 			}
 
-			GenerateCode(t => ns.Types.Add(t), rootState, new HashSet<string>());
+			GenerateCode(t => ns.Types.Add(t), rootState, new HashSet<string>(), genericArguments);
 
 			ns.Types.Add(new CodeTypeDeclaration(_syntaxEnd)
 			{
@@ -87,11 +87,39 @@ namespace FluentOMatic.Emission
 			return name;
 		}
 
-		private void GenerateCode(Action<CodeTypeDeclaration> addType, State entryState, HashSet<string> usedNames)
+		private CodeTypeDeclaration AddGenericArguments(CodeTypeDeclaration type, string[] genericArguments)
 		{
-			var stateType = new CodeTypeDeclaration(GenerateName("{0}{1}Builder", entryState.Name, usedNames))
+			foreach (var argument in genericArguments)
 			{
-			};
+				type.TypeParameters.Add(argument);
+			}
+			return type;
+		}
+
+		private CodeTypeReference AddGenericArguments(CodeTypeReference type, string[] genericArguments)
+		{
+			foreach (var argument in genericArguments)
+			{
+				type.TypeArguments.Add(argument);
+			}
+			return type;
+		}
+
+		private CodeTypeReference AddGenericArguments(string typeName, string[] genericArguments)
+		{
+			var type = new CodeTypeReference(typeName);
+			foreach (var argument in genericArguments)
+			{
+				type.TypeArguments.Add(argument);
+			}
+			return type;
+		}
+
+		private void GenerateCode(Action<CodeTypeDeclaration> addType, State entryState, HashSet<string> usedNames, string[] genericArguments)
+		{
+			var stateType = AddGenericArguments(new CodeTypeDeclaration(GenerateName("{0}{1}Builder", entryState.Name, usedNames))
+			{
+			}, genericArguments);
 
 			addType(stateType);
 
@@ -101,25 +129,27 @@ namespace FluentOMatic.Emission
 			foreach (var state in states)
 			{
 				// Create syntax interface type
-				var interfaceType = new CodeTypeDeclaration(GenerateName("{0}{1}Syntax", state.Name, usedNames))
+				var interfaceType = AddGenericArguments(new CodeTypeDeclaration(GenerateName("{0}{1}Syntax", state.Name, usedNames))
 				{
 					Attributes = MemberAttributes.Public,
 					TypeAttributes = TypeAttributes.Interface | TypeAttributes.Public,
-				};
+				}, genericArguments);
+
 				addType(interfaceType);
 
-				stateType.BaseTypes.Add(interfaceType.Name);
+				stateType.BaseTypes.Add(AddGenericArguments(interfaceType.Name, genericArguments));
 
 				var syntaxType = stateType;
 
 				// Create data container
 				if (!state.IsRoot)
 				{
-					syntaxType = new CodeTypeDeclaration(GenerateName("{0}{1}Data", state.Name, usedNames))
+					syntaxType = AddGenericArguments(new CodeTypeDeclaration(GenerateName("{0}{1}Data", state.Name, usedNames))
 					{
 						Attributes = MemberAttributes.Final | MemberAttributes.Public,
 						TypeAttributes = TypeAttributes.Sealed | TypeAttributes.Public,
-					};
+					}, genericArguments);
+
 					addType(syntaxType);
 
 					foreach (var parameter in state.Parameters)
@@ -140,15 +170,16 @@ namespace FluentOMatic.Emission
 					CodeMemberField nextStateField;
 					if (allowMultiple)
 					{
-						nextStateField = new CodeMemberField(
-							new CodeTypeReference(string.Format("System.Collections.Generic.IList<{0}>", syntaxType.Name)),
-							state.Name
-						)
+						var ilistType = new CodeTypeReference("System.Collections.Generic.IList");
+						ilistType.TypeArguments.Add(AddGenericArguments(syntaxType.Name, genericArguments));
+
+						var listType = new CodeTypeReference("System.Collections.Generic.List");
+						listType.TypeArguments.Add(AddGenericArguments(syntaxType.Name, genericArguments));
+
+						nextStateField = new CodeMemberField(ilistType, state.Name)
 						{
 							Attributes = MemberAttributes.Public,
-							InitExpression = new CodeObjectCreateExpression(
-								string.Format("System.Collections.Generic.List<{0}>", syntaxType.Name)
-							)
+							InitExpression = new CodeObjectCreateExpression(listType)
 						};
 					}
 					else
@@ -166,12 +197,12 @@ namespace FluentOMatic.Emission
 						StateData innerStateData;
 						if (!_syntaxTypes.TryGetValue(state.InnerState, out innerStateData))
 						{
-							GenerateCode(addType, state.InnerState, usedNames);
+							GenerateCode(addType, state.InnerState, usedNames, genericArguments);
 							innerStateData = _syntaxTypes[state.InnerState];
 						}
 
 						syntaxType.Members.Add(new CodeMemberField(
-							innerStateData.SyntaxType.Name,
+							AddGenericArguments(innerStateData.SyntaxType.Name, genericArguments),
 							_inner
 						) { Attributes = MemberAttributes.Public });
 					}
@@ -195,22 +226,22 @@ namespace FluentOMatic.Emission
 					};
 
 					stateData.InterfaceType.Members.Add(stateTransitionInterfaceMethod);
-					stateTransitionInterfaceMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
+					stateTransitionInterfaceMethod.ReturnType = AddGenericArguments(nextStateData.InterfaceType.Name, genericArguments);
 
 					// Add state transition method to type
 					var stateTransitionMethod = new CodeMemberMethod
 					{
 						Name = nextState.Name,
-						PrivateImplementationType = new CodeTypeReference(stateData.InterfaceType.Name),
+						PrivateImplementationType = AddGenericArguments(stateData.InterfaceType.Name, genericArguments),
 					};
 
 					stateType.Members.Add(stateTransitionMethod);
-					stateTransitionMethod.ReturnType = new CodeTypeReference(nextStateData.InterfaceType.Name);
+					stateTransitionMethod.ReturnType = AddGenericArguments(nextStateData.InterfaceType.Name, genericArguments);
 
 					var variable = new CodeVariableDeclarationStatement(
-						nextStateData.SyntaxType.Name,
+						AddGenericArguments(nextStateData.SyntaxType.Name, genericArguments),
 						"_" + nextState.Name,
-						new CodeObjectCreateExpression(nextStateData.SyntaxType.Name)
+						new CodeObjectCreateExpression(AddGenericArguments(nextStateData.SyntaxType.Name, genericArguments))
 					);
 					stateTransitionMethod.Statements.Add(variable);
 
@@ -267,10 +298,11 @@ namespace FluentOMatic.Emission
 					{
 						var innerStateData = _syntaxTypes[nextState.InnerState];
 
-						var methodParameter = new CodeParameterDeclarationExpression(
-							string.Format("Func<{0}, {1}>", innerStateData.InterfaceType.Name, _syntaxEnd),
-							_inner
-						);
+						var methodParameterType = new CodeTypeReference("Func");
+						methodParameterType.TypeArguments.Add(AddGenericArguments(innerStateData.InterfaceType.Name, genericArguments));
+						methodParameterType.TypeArguments.Add(_syntaxEnd);
+
+						var methodParameter = new CodeParameterDeclarationExpression(methodParameterType, _inner);
 
 						stateTransitionMethod.Parameters.Add(methodParameter);
 						stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
@@ -281,7 +313,7 @@ namespace FluentOMatic.Emission
 									new CodeSnippetExpression("_" + nextState.Name),
 									_inner
 								),
-								new CodeObjectCreateExpression(innerStateData.SyntaxType.Name)
+								new CodeObjectCreateExpression(AddGenericArguments(innerStateData.SyntaxType.Name, genericArguments))
 							)
 						);
 

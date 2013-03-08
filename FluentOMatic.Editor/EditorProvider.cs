@@ -113,7 +113,7 @@ namespace FluentOMatic.Editor
 						using (var output = new StringWriter())
 						{
 							var generator = new CodeGenerator();
-							generator.GenerateCode(states.First(), output, string.Join(".", ns, parser.Syntax.Name), parser.Syntax.Usings);
+							generator.GenerateCode(states.First(), output, string.Join(".", ns, parser.Syntax.Name), parser.Syntax.Usings, parser.Syntax.GenericArguments);
 							saveDocument(output.ToString());
 						}
 					}

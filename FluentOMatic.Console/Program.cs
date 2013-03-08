@@ -17,6 +17,7 @@
 
 using FluentOMatic.Emission;
 using FluentOMatic.States;
+using Microsoft.CSharp;
 using NDesk.Options;
 using System.Collections.Generic;
 using System.IO;
@@ -33,6 +34,7 @@ namespace FluentOMatic.Console
 			string namespaceName = null;
 			bool help = false;
 			bool graph = false;
+			bool compile = false;
 
 			var options = new OptionSet
 			{
@@ -40,6 +42,7 @@ namespace FluentOMatic.Console
 				{ "o|output=", v => outputFile = v },
  				{ "ns|namespace=", v => namespaceName = v },
 				{ "g|graph", var => graph = true },
+				{ "c|compile", var => compile = true },
 				{ "h|?|help", v => help = true },
 			};
 
@@ -91,10 +94,35 @@ namespace FluentOMatic.Console
 			{
 				GenerateStateGraph(states, output);
 			}
+			else if (compile)
+			{
+				var generator = new CodeGenerator();
+				var buffer = new StringWriter();
+				generator.GenerateCode(states.First(), buffer, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings, parser.Syntax.GenericArguments);
+
+				var compiler = new CSharpCodeProvider();
+				var result = compiler.CompileAssemblyFromSource(new System.CodeDom.Compiler.CompilerParameters(new string[0], "temp.dll", true), new[] { buffer.ToString() });
+
+				foreach (var resultLine in result.Output)
+				{
+					output.WriteLine(resultLine);
+				}
+
+				output.WriteLine();
+
+				var reader = new StringReader(buffer.ToString());
+
+				int lineNumber = 0;
+				string line;
+				while ((line = reader.ReadLine()) != null)
+				{
+					output.WriteLine("{0}\t{1}", ++lineNumber, line);
+				}
+			}
 			else
 			{
 				var generator = new CodeGenerator();
-				generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings);
+				generator.GenerateCode(states.First(), output, namespaceName ?? parser.Syntax.Name, parser.Syntax.Usings, parser.Syntax.GenericArguments);
 			}
 			output.Flush();
 			output.Close();

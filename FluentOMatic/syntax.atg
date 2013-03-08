@@ -32,6 +32,8 @@ CHARACTERS
   plus = '+'.
   comma = ','.
   string = ANY - '"'.
+  lt = '<'.
+  gt = '>'.
 
 TOKENS
   dot = dot.
@@ -47,6 +49,8 @@ TOKENS
   string = "\"" { string } "\"".
   using = "using".
   endOfUsing = ";".
+  genericArgListStart = lt.
+  genericArgListEnd = gt.
 
 COMMENTS FROM "/*" TO "*/" NESTED
 COMMENTS FROM "//" TO lf
@@ -56,17 +60,30 @@ IGNORE cr + lf + tab
 PRODUCTIONS
 
 FluentOMatic =									(. Syntax = new FluentSyntax(); .)
-												(. string syntaxName; .)
-  SyntaxName<out syntaxName>					(. Syntax.Name = syntaxName; .)
+												(. string syntaxName; string[] args; .)
+  SyntaxName<out syntaxName, out args>			(. Syntax.Name = syntaxName; Syntax.GenericArguments = args; .)
 												(. SUsingList usings; .)
   UsingList<out usings>							(. Syntax.Usings.AddRange(usings); .)
 												(. SOperationList operations; .)
   OperationList<out operations>					(. Syntax.Operations.AddRange(operations); .)
   .
 
-SyntaxName<out string name> =
-  syntax
+SyntaxName<out string name, out string[] args> =
+  syntax										(. args = new string[0]; .)
   ident											(. name = t.val; .)
+  [
+    GenericArgumentList<out args>
+  ]
+  .
+
+GenericArgumentList<out string[] args> =		(. args = null; .)
+  genericArgListStart							(. var list = new List<string>(); .)
+  ident											(. list.Add(t.val); .)
+  {
+    parameterSep
+    ident										(. list.Add(t.val); .)
+  }
+  genericArgListEnd								(. args = list.ToArray(); .)
   .
 
 Using<out SUsing result> =						(. result = new SUsing(); .)

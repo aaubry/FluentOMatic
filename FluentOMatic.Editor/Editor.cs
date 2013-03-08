@@ -46,27 +46,26 @@ namespace FluentOMatic.Editor
 			while ((token = scanner.Scan()).kind != 0)
 			{
 				var kind = token.kind;
-				switch (kind)
+				if(kind == _tokenTypes.Identifier.Id)
 				{
-					case TokenType.Identifier:
-						if (scanner.Peek().kind == TokenType.Identifier)
-						{
-							kind = TokenType.Type;
-						}
-						else if (previousTokenKind == TokenType.Type)
-						{
-							kind = TokenType.Parameter;
-						}
-						else if (previousTokenKind == TokenType.Syntax)
-						{
-							kind = TokenType.SyntaxName;
-						}
-						else if (previousTokenKind == TokenType.Using || isNamespace)
-						{
-							kind = TokenType.Namespace;
-							isNamespace = true;
-						}
-						break;
+					if (scanner.Peek().kind == _tokenTypes.Identifier.Id)
+					{
+						kind = _tokenTypes.Type.Id;
+					}
+					else if (previousTokenKind == _tokenTypes.Type.Id)
+					{
+						kind = _tokenTypes.Parameter.Id;
+					}
+					else if (previousTokenKind == _tokenTypes.Syntax.Id)
+					{
+						kind = _tokenTypes.SyntaxName.Id;
+					}
+					else if (previousTokenKind == _tokenTypes.Using.Id || isNamespace)
+					{
+						kind = _tokenTypes.Namespace.Id;
+						isNamespace = true;
+					}
+					break;
 				}
 
 				classifications.Add(
@@ -75,7 +74,7 @@ namespace FluentOMatic.Editor
 							span.Snapshot,
 							new Span(span.Start + token.charPos, token.val.Length)
 						),
-						_classificationTypes[kind - 1]
+						_tokenTypes[kind].ClassificationType
 					)
 				);
 

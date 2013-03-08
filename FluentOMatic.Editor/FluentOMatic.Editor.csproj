@@ -73,19 +73,11 @@
     <Compile Include="Editor.cs" />
     <Compile Include="FileAndContentTypeDefinitions.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Tokens.cs">
-      <AutoGen>True</AutoGen>
-      <DesignTime>True</DesignTime>
-      <DependentUpon>Tokens.tt</DependentUpon>
-    </Compile>
+    <Compile Include="Tokens.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="source.extension.vsixmanifest">
       <SubType>Designer</SubType>
-    </None>
-    <None Include="Tokens.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>Tokens.cs</LastGenOutput>
     </None>
   </ItemGroup>
   <ItemGroup>

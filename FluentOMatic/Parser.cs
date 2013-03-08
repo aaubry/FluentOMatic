@@ -17,6 +17,7 @@
 //    along with FluentOMatic.  If not, see <http://www.gnu.org/licenses/>.
 
 using System;
+using System.Collections.Generic;
 using SOperation = FluentOMatic.Syntax.Operation;
 using SOperationList = FluentOMatic.Syntax.OperationList;
 using SParameter = FluentOMatic.Syntax.Parameter;
@@ -45,7 +46,9 @@ public class Parser {
 	public const int _string = 11;
 	public const int _using = 12;
 	public const int _endOfUsing = 13;
-	public const int maxT = 14;
+	public const int _genericArgListStart = 14;
+	public const int _genericArgListEnd = 15;
+	public const int maxT = 16;
 
 	const bool T = true;
 	const bool x = false;
@@ -121,9 +124,9 @@ public class Parser {
 	
 	void FluentOMatic() {
 		Syntax = new FluentSyntax(); 
-		string syntaxName; 
-		SyntaxName(out syntaxName);
-		Syntax.Name = syntaxName; 
+		string syntaxName; string[] args; 
+		SyntaxName(out syntaxName, out args);
+		Syntax.Name = syntaxName; Syntax.GenericArguments = args; 
 		SUsingList usings; 
 		UsingList(out usings);
 		Syntax.Usings.AddRange(usings); 
@@ -132,10 +135,14 @@ public class Parser {
 		Syntax.Operations.AddRange(operations); 
 	}
 
-	void SyntaxName(out string name) {
+	void SyntaxName(out string name, out string[] args) {
 		Expect(10);
+		args = new string[0]; 
 		Expect(2);
 		name = t.val; 
+		if (la.kind == 14) {
+			GenericArgumentList(out args);
+		}
 	}
 
 	void UsingList(out SUsingList result) {
@@ -156,6 +163,21 @@ public class Parser {
 			Operation(out operation);
 			result.Add(operation); 
 		}
+	}
+
+	void GenericArgumentList(out string[] args) {
+		args = null; 
+		Expect(14);
+		var list = new List<string>(); 
+		Expect(2);
+		list.Add(t.val); 
+		while (la.kind == 9) {
+			Get();
+			Expect(2);
+			list.Add(t.val); 
+		}
+		Expect(15);
+		args = list.ToArray(); 
 	}
 
 	void Using(out SUsing result) {
@@ -222,7 +244,7 @@ public class Parser {
 		} else if (la.kind == 2) {
 			Get();
 			result.Type = t.val; 
-		} else SynErr(15);
+		} else SynErr(17);
 		Expect(2);
 		result.Name = t.val; 
 	}
@@ -239,7 +261,7 @@ public class Parser {
 	}
 	
 	static readonly bool[,] set = {
-		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x}
+		{T,x,x,x, x,x,x,x, x,x,x,x, x,x,x,x, x,x}
 
 	};
 } // end Parser
@@ -267,8 +289,10 @@ public class Errors {
 			case 11: s = "string expected"; break;
 			case 12: s = "using expected"; break;
 			case 13: s = "endOfUsing expected"; break;
-			case 14: s = "??? expected"; break;
-			case 15: s = "invalid Parameter"; break;
+			case 14: s = "genericArgListStart expected"; break;
+			case 15: s = "genericArgListEnd expected"; break;
+			case 16: s = "??? expected"; break;
+			case 17: s = "invalid Parameter"; break;
 
 			default: s = "error " + n; break;
 		}

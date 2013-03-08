@@ -1,3 +1,18 @@
-﻿syntax s
-.First()+
-.Second()+
+﻿syntax Service<T, T2>
+
+.OpenSearch(string name
+  .Description(string lang, string text)+
+  .Operation(string scheme, string template
+	.Description(string lang, string text)+
+	.Strategy(string container, string clientId, string xml)+
+  )+
+)*
+.Wsdl(string name, string ns
+  .Description(string lang, string text
+	.Tag(string name)*
+  )+
+  .Operation(string name
+	.Description(string lang, string text)+
+	.Strategy(string container, string clientId, string xml)+
+  )+
+)*

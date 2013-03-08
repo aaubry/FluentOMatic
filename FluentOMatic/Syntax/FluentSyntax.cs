@@ -20,6 +20,7 @@ namespace FluentOMatic.Syntax
 	public class FluentSyntax
 	{
 		public string Name { get; set; }
+		public string[] GenericArguments { get; set; }
 		public UsingList Usings { get; private set; }
 		public OperationList Operations { get; private set; }
 
