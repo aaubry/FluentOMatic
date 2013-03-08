@@ -75,7 +75,7 @@ namespace FluentOMatic.Tests.Integration
 		}
 
 		[Fact]
-		public void X()
+		public void FailingCase_1()
 		{
 			var states = ParseSyntaxToGraph(@"
 				syntax Service

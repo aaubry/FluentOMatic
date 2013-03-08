@@ -45,10 +45,13 @@ namespace FluentOMatic.Editor
 
 		private class TokenTypes
 		{
+			private readonly IClassificationType _defaultClassificationType;
 			private readonly IDictionary<int, TokenType> _tokenTypesById;
 
 			public TokenTypes(IClassificationTypeRegistryService registry)
 			{
+				_defaultClassificationType = registry.GetClassificationType(PredefinedClassificationTypeNames.ExcludedCode);
+
 				_tokenTypesById = new[]
 				{
 					// Defined in syntax
@@ -101,7 +104,11 @@ namespace FluentOMatic.Editor
 
 			public TokenType this[int id]
 			{
-				get { return _tokenTypesById[id]; }
+				get
+				{
+					TokenType type;
+					return _tokenTypesById.TryGetValue(id, out type) ? type : new TokenType(id, _defaultClassificationType);
+				}
 			}
 		}
 	}
