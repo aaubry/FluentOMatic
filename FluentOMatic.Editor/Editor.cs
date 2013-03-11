@@ -65,7 +65,6 @@ namespace FluentOMatic.Editor
 						kind = _tokenTypes.Namespace.Id;
 						isNamespace = true;
 					}
-					break;
 				}
 
 				classifications.Add(
