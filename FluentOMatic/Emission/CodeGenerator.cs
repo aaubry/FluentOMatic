@@ -25,6 +25,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.InteropServices;
 
 namespace FluentOMatic.Emission
 {
@@ -308,6 +309,13 @@ namespace FluentOMatic.Emission
 
 						var methodParameter = new CodeParameterDeclarationExpression(methodParameterType, _inner);
 
+						if (nextState.InnerState.IsTerminal)
+						{
+							methodParameter.CustomAttributes.Add(new CodeAttributeDeclaration(
+								new CodeTypeReference(typeof(OptionalAttribute))
+							));
+						}
+
 						stateTransitionMethod.Parameters.Add(methodParameter);
 						stateTransitionInterfaceMethod.Parameters.Add(methodParameter);
 
@@ -322,12 +330,35 @@ namespace FluentOMatic.Emission
 						);
 
 						stateTransitionMethod.Statements.Add(
-							new CodeDelegateInvokeExpression(
-								new CodeSnippetExpression(methodParameter.Name),
-								new CodeFieldReferenceExpression(
-									new CodeSnippetExpression("_" + nextState.Name),
-									_inner
-								)
+							new CodeConditionStatement(
+								new CodeBinaryOperatorExpression(
+									new CodeArgumentReferenceExpression(_inner),
+									CodeBinaryOperatorType.IdentityInequality,
+									new CodePrimitiveExpression(null)
+								),
+								new[]
+								{
+									new CodeExpressionStatement(
+										new CodeDelegateInvokeExpression(
+											new CodeSnippetExpression(methodParameter.Name),
+											new CodeFieldReferenceExpression(
+												new CodeSnippetExpression("_" + nextState.Name),
+												_inner
+											)
+										)
+									)
+								},
+								nextState.InnerState.IsTerminal
+									? new CodeStatement[0]
+									: new[]
+									{
+										new CodeThrowExceptionStatement(
+											new CodeObjectCreateExpression(
+												typeof(ArgumentNullException),
+												new CodePrimitiveExpression(_inner)
+											)
+										)
+									}
 							)
 						);
 					}
