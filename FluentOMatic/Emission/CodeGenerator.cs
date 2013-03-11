@@ -61,6 +61,7 @@ namespace FluentOMatic.Emission
 			{
 				Attributes = MemberAttributes.Public,
 				TypeAttributes = TypeAttributes.Interface | TypeAttributes.Public,
+				IsPartial = true,
 			});
 
 			var codeProvider = new CSharpCodeProvider();
@@ -119,6 +120,7 @@ namespace FluentOMatic.Emission
 		{
 			var stateType = AddGenericArguments(new CodeTypeDeclaration(GenerateName("{0}{1}Builder", entryState.Name, usedNames))
 			{
+				IsPartial = true,
 			}, genericArguments);
 
 			addType(stateType);
@@ -133,6 +135,7 @@ namespace FluentOMatic.Emission
 				{
 					Attributes = MemberAttributes.Public,
 					TypeAttributes = TypeAttributes.Interface | TypeAttributes.Public,
+					IsPartial = true,
 				}, genericArguments);
 
 				addType(interfaceType);
@@ -148,6 +151,7 @@ namespace FluentOMatic.Emission
 					{
 						Attributes = MemberAttributes.Final | MemberAttributes.Public,
 						TypeAttributes = TypeAttributes.Sealed | TypeAttributes.Public,
+						IsPartial = true,
 					}, genericArguments);
 
 					addType(syntaxType);
