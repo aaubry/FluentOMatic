@@ -190,7 +190,7 @@ namespace FluentOMatic.Emission
 					else
 					{
 						nextStateField = new CodeMemberField(
-							syntaxType.Name,
+							AddGenericArguments(syntaxType.Name, genericArguments),
 							state.Name
 						) { Attributes = MemberAttributes.Public };
 					}

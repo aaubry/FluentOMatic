@@ -1,18 +1,5 @@
-﻿syntax Service<T, T2>
+﻿syntax List<T>
+using System.Linq.Expressions;
 
-.OpenSearch(string name
-  .Description(string lang, string text)+
-  .Operation(string scheme, string template
-	.Description(string lang, string text)+
-	.Strategy(string container, string clientId, string xml)+
-  )+
-)*
-.Wsdl(string name, string ns
-  .Description(string lang, string text
-	.Tag(string name)*
-  )+
-  .Operation(string name
-	.Description(string lang, string text)+
-	.Strategy(string container, string clientId, string xml)+
-  )+
-)*
+.Items(T items)
+.Column("Expression<Func<T, object>>" getter)
